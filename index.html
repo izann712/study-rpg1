@@ -1,201 +1,739 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>RPG Educativo - 1º Bachillerato</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>SabioQuest — App de estudio</title>
 <style>
-body { font-family: Arial, sans-serif; margin:0; padding:0; background:#f4f6fa; }
-header { background:#4a90e2; color:white; text-align:center; padding:15px; }
-.container { padding:15px; }
-.card { background:white; border-radius:10px; padding:15px; margin-bottom:15px; box-shadow:0 3px 6px rgba(0,0,0,0.1);}
-button { padding:8px 14px; margin:5px; border:none; border-radius:6px; background:#4a90e2; color:white; cursor:pointer; }
-button:hover { background:#357ABD; }
-h2,h3 { margin:8px 0; }
-ul { list-style:none; padding:0;}
-li { margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; }
-.mission-name { flex:1; margin-right:10px; }
+  :root{
+    --bg:#f4f6f8; --card:#fff; --accent:#3b82f6; --muted:#666; --success:#10b981;
+  }
+  body{font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; margin:0; background:var(--bg); color:#111;}
+  header{background:linear-gradient(90deg,#2563eb,#60a5fa); color:white; padding:18px 20px; display:flex; align-items:center; justify-content:space-between;}
+  header h1{margin:0;font-size:18px}
+  main{padding:18px; max-width:980px; margin:18px auto;}
+  .grid{display:grid; gap:14px; grid-template-columns:1fr 320px;}
+  .card{background:var(--card); border-radius:10px; padding:14px; box-shadow:0 6px 18px rgba(20,20,40,0.06);}
+  .btn{background:var(--accent); color:white; border:none; padding:8px 12px; border-radius:8px; cursor:pointer;}
+  .btn.secondary{background:#e5e7eb; color:#111;}
+  .row{display:flex; gap:8px; align-items:center;}
+  .muted{color:var(--muted); font-size:13px;}
+  .progressWrap{background:#eef2ff; height:16px; border-radius:999px; overflow:hidden;}
+  .progressBar{height:100%; background:linear-gradient(90deg,var(--accent),#60a5fa); width:0%;}
+  nav{display:flex; gap:8px; margin-bottom:12px;}
+  nav button{background:transparent; border:1px solid transparent; padding:8px 12px; border-radius:8px; cursor:pointer;}
+  nav button.active{background:var(--accent); color:white;}
+  ul.missions{list-style:none; padding:0; margin:8px 0;}
+  ul.missions li{display:flex; justify-content:space-between; align-items:center; padding:8px; border-radius:8px; background:#fafafa; margin-bottom:8px;}
+  small.tag{background:#eef2f6; padding:4px 8px; border-radius:999px; font-size:12px;}
+  .shop-item{display:flex; justify-content:space-between; align-items:center; padding:8px; border-radius:8px; background:#fafafa; margin-bottom:8px;}
+  .inventory-grid{display:flex; flex-wrap:wrap; gap:8px;}
+  .trophy{background:linear-gradient(180deg,#fff6e5,#fff9f0); padding:8px; border-radius:8px; min-width:140px; box-shadow:0 4px 10px rgba(0,0,0,0.04);}
+  footer{margin-top:18px; text-align:center; color:var(--muted); font-size:13px;}
+  .small-muted{font-size:12px; color:var(--muted);}
+  .notif{position:fixed; right:18px; bottom:18px; background:#111; color:white; padding:10px 14px; border-radius:8px; opacity:0.95;}
+  .devPanel{margin-top:12px; padding:8px; border-radius:8px; background:#fff; box-shadow:inset 0 0 0 1px #f1f1f1;}
+  @media (max-width:900px){ .grid{grid-template-columns:1fr;} .card{padding:12px;} }
 </style>
 </head>
 <body>
-
 <header>
-<h1>RPG Educativo</h1>
-<p>Nivel <span id="level">1</span> | XP <span id="xp">0</span> | ME <span id="me">0</span></p>
+  <h1>SabioQuest</h1>
+  <div style="font-size:14px; opacity:0.95">Tu juego de estudio — ¡sube a Sabio 100!</div>
 </header>
 
-<div class="container">
+<main>
+  <nav>
+    <button id="tabProfile" class="active">Ficha</button>
+    <button id="tabMissions">Misiones</button>
+    <button id="tabShop">Tienda (Logros)</button>
+    <button id="tabInventory">Logros</button>
+    <button id="tabSkills">Habilidades</button>
+  </nav>
 
-<div class="card">
-<h2>Stats del Personaje</h2>
-<p>Fuerza Mental: <span id="mental">5</span></p>
-<p>Disciplina: <span id="discipline">4</span></p>
-<p>Concentración: <span id="focus">3</span></p>
-<p>Creatividad: <span id="creativity">6</span></p>
-<p>Energía: <span id="energy">10</span></p>
-</div>
+  <section id="area">
+    <!-- content injected by JS -->
+  </section>
 
-<div class="card">
-<h2>Misiones Diarias</h2>
-<ul id="dailyMissions"></ul>
-</div>
+  <footer class="small-muted">Hecho con <strong>SabioQuest</strong> — guarda, completa misiones y mejora cada día.</footer>
+</main>
 
-<div class="card">
-<h2>Misiones Semanales</h2>
-<ul id="weeklyMissions"></ul>
-</div>
+<!-- Templates hidden -->
+<template id="profileTpl">
+  <div class="grid">
+    <div class="card">
+      <h2>Ficha del peregrino</h2>
+      <div style="display:flex; gap:12px; align-items:center; margin-top:8px;">
+        <div style="width:76px; height:76px; border-radius:12px; background:linear-gradient(180deg,#fff,#f3f4f6); display:flex; align-items:center; justify-content:center; font-weight:700; color:#111;">P</div>
+        <div>
+          <div style="font-size:18px; font-weight:600;">Peregrino del Conocimiento</div>
+          <div class="muted">Clase: Académico Novato</div>
+        </div>
+      </div>
 
-<div class="card">
-<h2>Tienda de Consumibles</h2>
-<button onclick="buyItem('Poción de Enfoque',10)">Poción de Enfoque (+1 ME) - 10 ME</button>
-<button onclick="buyItem('Snack Energético',5)">Snack Energético (+2 Energía) - 5 ME</button>
-<button onclick="buyItem('Café del Erudito',8)">Café del Erudito (+1 Concentración) - 8 ME</button>
-</div>
+      <div style="margin-top:12px;">
+        <div class="row" style="justify-content:space-between;">
+          <div><strong>Nivel</strong></div>
+          <div id="labelLevel">1</div>
+        </div>
+        <div style="margin-top:8px;">
+          <div class="row" style="justify-content:space-between;">
+            <div class="muted">XP</div><div id="labelXP" class="muted">0 / 100</div>
+          </div>
+          <div class="progressWrap" style="margin-top:8px;"><div id="progressBar" class="progressBar"></div></div>
+        </div>
+        <div style="margin-top:12px;">
+          <div class="row" style="justify-content:space-between;">
+            <div><strong>ME</strong> <span class="muted"> (Monedas de Estudio)</span></div>
+            <div id="labelME">20</div>
+          </div>
+        </div>
 
-</div>
+        <div style="margin-top:12px;" class="row">
+          <button id="btnOpenMissions" class="btn">Ir a misiones</button>
+          <button id="btnOpenShop" class="btn secondary">Tienda</button>
+        </div>
+
+        <div class="devPanel small-muted">
+          <div style="font-weight:600; margin-bottom:6px;">Panel de prueba (solo para testing)</div>
+          <div class="row">
+            <button id="btnSimDay" class="btn secondary">Simular +1 día</button>
+            <button id="btnSimWeek" class="btn secondary">Simular +1 semana</button>
+            <button id="btnReset" class="btn secondary">Reset total</button>
+          </div>
+          <div style="margin-top:8px;" class="muted">Usa simuladores para probar regeneración diaria/semanal.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Estadísticas</h3>
+      <div style="display:grid; gap:8px; margin-top:8px;">
+        <div><strong>Fuerza mental:</strong> <span id="statMental">5</span></div>
+        <div><strong>Disciplina:</strong> <span id="statDisciplina">4</span></div>
+        <div><strong>Concentración:</strong> <span id="statConcentracion">3</span></div>
+        <div><strong>Creatividad:</strong> <span id="statCreatividad">6</span></div>
+        <div><strong>Energía diaria:</strong> <span id="statEnergia">10</span></div>
+      </div>
+      <hr style="margin:12px 0;">
+      <h4>Progreso a objetivos</h4>
+      <div style="display:flex; gap:8px; flex-direction:column;">
+        <div><small class="muted">Nivel 10: Gestión del Tiempo I (habilidad desbloqueada)</small></div>
+        <div style="height:8px; background:#f1f5f9; border-radius:8px;"><div style="width:42%; height:100%; background:linear-gradient(90deg,var(--accent),#60a5fa); border-radius:8px;"></div></div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<template id="missionsTpl">
+  <div class="card" style="margin-bottom:12px;">
+    <h2>Misiones diarias</h2>
+    <div class="muted">Se generan 2–3 al día y se reemplazan automáticamente al pasar el día.</div>
+    <ul class="missions" id="dailyList"></ul>
+  </div>
+
+  <div class="card" style="margin-top:12px;">
+    <h2>Misiones semanales</h2>
+    <div class="muted">Se generan 2 cada semana. Se reemplazan al cambiar la semana.</div>
+    <ul class="missions" id="weeklyList"></ul>
+  </div>
+
+  <div class="card" style="margin-top:12px;">
+    <h2>Misiones especiales</h2>
+    <div class="muted">Estas son fijas y no se regeneran automáticamente.</div>
+    <ul class="missions" id="specialList"></ul>
+  </div>
+</template>
+
+<template id="shopTpl">
+  <div class="card">
+    <h2>Tienda — Logros y Trofeos</h2>
+    <div class="muted">Compra trofeos con tus ME. Los trofeos se muestran en 'Logros'.</div>
+    <div style="margin-top:10px;" id="shopItems"></div>
+  </div>
+</template>
+
+<template id="inventoryTpl">
+  <div class="card">
+    <h2>Tus logros</h2>
+    <div class="muted">Trofeos y logros que has comprado o desbloqueado.</div>
+    <div class="inventory-grid" id="inventoryGrid" style="margin-top:10px;"></div>
+  </div>
+</template>
+
+<template id="skillsTpl">
+  <div class="card">
+    <h2>Habilidades</h2>
+    <div class="muted">Habilidades desbloqueadas por nivel.</div>
+    <ul id="skillsList" style="margin-top:12px;"></ul>
+  </div>
+</template>
+
+<!-- Notification -->
+<div id="toast" class="notif" style="display:none;"></div>
 
 <script>
-// ===== PERSONAJE =====
-let stats = {
-    level:1, xp:0, me:0,
-    mental:5, discipline:4, focus:3, creativity:6, energy:10
+/*
+  SabioQuest - Single-file web app
+  - Usa localStorage para persistencia
+  - Genera misiones diarias/semana automáticamente al cargar
+  - Permite completar misiones, comprar logros con ME y ver logros
+  - Español UI
+*/
+
+/* -------------------------
+   Config inicial / Pools
+   ------------------------- */
+const DAILY_POOL = [
+  {id:'d1', title:'Revisión rápida de 15 min', xp:10, me:1, info:'Repasar 15 minutos un tema ya visto.'},
+  {id:'d2', title:'Orden del escritorio o mochila', xp:8, me:0, info:'Organizar tus apuntes y material.'},
+  {id:'d3', title:'Hacer 5 ejercicios extra', xp:15, me:1, info:'Resolver 5 ejercicios del tema.'},
+  {id:'d4', title:'Leer 10 páginas', xp:12, me:0, info:'Lectura de 10 páginas de libro o apuntes.'},
+  {id:'d5', title:'Mini-resumen de 5 líneas', xp:12, me:0, info:'Escribe un resumen corto del tema.'},
+  {id:'d6', title:'Repasar apuntes de una asignatura', xp:10, me:0, info:'Repasar apuntes recientes.'},
+  {id:'d7', title:'Resolver dudas pendientes', xp:14, me:0, info:'Aclarar dudas que tienes en el cuaderno.'},
+  {id:'d8', title:'Preparar la agenda del día', xp:8, me:0, info:'Planificar las tareas del día.'},
+  {id:'d9', title:'Repasar fórmulas importantes', xp:10, me:0, info:'Repaso de fórmulas clave.'},
+  {id:'d10', title:'Leer un artículo educativo', xp:12, me:0, info:'Leer un artículo o blog educativo.'},
+  {id:'d11', title:'Hacer una actividad de memoria', xp:10, me:0, info:'Ejercicio breve de memoria (flashcards).'},
+  {id:'d12', title:'Enseñar a un amigo 10 min', xp:20, me:1, info:'Explica un concepto a otra persona.'},
+  {id:'d13', title:'Escribir 5 flashcards', xp:12, me:0, info:'Crear tarjetas de repaso.'},
+  {id:'d14', title:'Practicar problemas de cálculo', xp:15, me:0, info:'Resolver problemas de cálculo.'},
+  {id:'d15', title:'Escuchar un podcast educativo 20min', xp:12, me:0, info:'Escuchar contenido educativo.'}
+];
+
+const WEEKLY_POOL = [
+  {id:'w1', title:'Desafío de comprensión', xp:30, me:3, info:'Estudia 1 hora un tema complejo y resume.'},
+  {id:'w2', title:'Mejorador de deberes', xp:25, me:2, info:'Entrega una tarea revisada y mejorada.'},
+  {id:'w3', title:'Proyecto del peregrino', xp:40, me:4, info:'Avanza claramente en un proyecto.'},
+  {id:'w4', title:'Autoexamen de 10 preguntas', xp:35, me:2, info:'Crea y haz un test propio.'},
+  {id:'w5', title:'Mapa mental de un tema', xp:30, me:0, info:'Crear un mapa mental.'},
+  {id:'w6', title:'Organizar apuntes de la semana', xp:35, me:0, info:'Ordenar y resumir la semana.'},
+  {id:'w7', title:'Estudiar 2 horas acumuladas', xp:50, me:0, info:'Sumar 2h de estudio durante la semana.'},
+  {id:'w8', title:'Completar un trabajo pendiente', xp:45, me:0, info:'Finalizar trabajo atrasado.'},
+  {id:'w9', title:'Sesión de estudio en biblioteca', xp:40, me:0, info:'Estudiar en ambiente serio.'},
+  {id:'w10', title:'Preparar una presentación corta', xp:38, me:2, info:'Crear y ensayar presentación corta.'},
+  {id:'w11', title:'Revisión de exámenes pasados', xp:45, me:0, info:'Repasar exámenes previos.'}
+];
+
+const SPECIALS = [
+  {id:'s1', title:'Mini-examen personal 15 preguntas', xp:60, me:5, info:'Simula 15 preguntas.'},
+  {id:'s2', title:'Guardia del conocimiento (90 min)', xp:70, me:0, info:'90 min de estudio sin distracciones.'},
+  {id:'s3', title:'Maratón 2 horas', xp:80, me:0, info:'2 horas concentradas.'},
+  {id:'s4', title:'Explicar un tema a alguien', xp:50, me:0, info:'Enseñar a otra persona.'},
+  {id:'s5', title:'Resumen maestro de unidad', xp:65, me:0, info:'Resumen completo de la unidad.'},
+  {id:'s6', title:'Simulación de examen (1 h)', xp:90, me:10, info:'Simula un examen real.'}
+];
+
+const TROPHIES = [
+  {id:'t1', title:'Trofeo del Primer Paso', price:15, desc:'Recuerdo del comienzo de tu aventura.'},
+  {id:'t2', title:'Medalla de la Constancia', price:40, desc:'Has sido constante.'},
+  {id:'t3', title:'Insignia de la Concentración', price:80, desc:'Para grandes sesiones de estudio.'},
+  {id:'t4', title:'Cetro de la Memoria', price:150, desc:'Mejora simbólica de memoria.'},
+  {id:'t5', title:'Corona del Sabio', price:300, desc:'Trofeo épico para ahorrar y presumir.'}
+];
+
+/* -------------------------
+   Storage keys & helpers
+   ------------------------- */
+const KEY = (k)=> `sabio_${k}`;
+
+function save(k, v){ localStorage.setItem(KEY(k), JSON.stringify(v)); }
+function load(k, fallback=null){
+  const v = localStorage.getItem(KEY(k));
+  return v ? JSON.parse(v) : fallback;
+}
+
+/* -------------------------
+   Nivel / XP table
+   ------------------------- */
+function xpForLevel(level){
+  if(level <= 10) return 100;
+  if(level <= 20) return 150;
+  if(level <= 40) return 200;
+  if(level <= 60) return 300;
+  if(level <= 80) return 400;
+  return 500;
+}
+
+/* -------------------------
+   Fecha helpers
+   ------------------------- */
+function getDayOfYear(d){
+  const start = new Date(d.getFullYear(),0,0);
+  const diff = d - start + ((start.getTimezoneOffset() - d.getTimezoneOffset())*60000);
+  const oneDay = 1000*60*60*24;
+  return Math.floor(diff/oneDay);
+}
+function getISOWeekNumber(d){
+  // returns ISO week number (1-53)
+  const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  const dayNum = date.getUTCDay() || 7;
+  date.setUTCDate(date.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(date.getUTCFullYear(),0,1));
+  return Math.ceil((((date - yearStart) / 86400000) + 1)/7);
+}
+
+/* -------------------------
+   Estado inicial / cargar
+   ------------------------- */
+let state = {
+  level: 1,
+  xp: 0,
+  xpNeeded: 100,
+  me: 20,
+  daily: [], // array of mission objects for the day
+  weekly: [],
+  specials: SPECIALS.slice(), // fixed pool displayed
+  inventory: [], // purchased trophies ids
+  stats: {mental:5, disciplina:4, concentracion:3, creatividad:6, energia:10}
 };
 
-// ===== MISIONES =====
-const dailyBase = [
-"Revisión rápida de 15 min (+10 XP, +1 ME)",
-"Orden del escritorio o mochila (+8 XP)",
-"Hacer 5 ejercicios extra (+15 XP, +1 ME)",
-"Leer 10 páginas (+12 XP)",
-"Mini-resumen de 5 líneas (+12 XP)",
-"Repasar apuntes de una asignatura (+10 XP)",
-"Resolver dudas pendientes (+14 XP)",
-"Preparar la agenda del día (+8 XP)",
-"Repasar fórmulas importantes (+10 XP)",
-"Leer un artículo educativo (+12 XP)",
-"Hacer una actividad de memoria (+10 XP)",
-"Practicar problemas de cálculo (+15 XP)"
-];
-
-const weeklyBase = [
-"Mejorar algún trabajo o deberes (+25 XP, +2 ME)",
-"Autoexamen de 10 preguntas (+35 XP, +2 ME)",
-"Mapa mental de un tema (+30 XP)",
-"Hacer resúmenes de alguna asignatura (+35 XP)",
-"Estudiar 2 horas acumuladas (+50 XP)",
-"Completar un trabajo largo pendiente (+45 XP)",
-"Revisión profunda de exámenes pasados (+45 XP)"
-];
-
-// ===== GUARDADO =====
-function saveProgress(){
-    localStorage.setItem('rpgStats', JSON.stringify(stats));
-    localStorage.setItem('rpgDaily', JSON.stringify(dailyMissions));
-    localStorage.setItem('rpgWeekly', JSON.stringify(weeklyMissions));
-}
-function loadProgress(){
-    const savedStats = JSON.parse(localStorage.getItem('rpgStats'));
-    if(savedStats) stats = savedStats;
+function loadState(){
+  const s = load('state', null);
+  if(s) { state = Object.assign(state, s); }
+  // ensure xpNeeded consistent
+  state.xpNeeded = xpForLevel(state.level);
 }
 
-// ===== AUXILIARES =====
-function shuffle(array){ return array.sort(()=>Math.random()-0.5); }
-function getWeekNumber(d){
-    d = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-    d.setHours(0,0,0,0);
-    d.setDate(d.getDate()+4-(d.getDay()||7));
-    let yearStart = new Date(d.getFullYear(),0,1);
-    return Math.ceil((((d - yearStart)/86400000)+1)/7);
+/* -------------------------
+   Save wrapper
+   ------------------------- */
+function saveState(){
+  save('state', state);
 }
 
-// ===== GENERAR MISIONES =====
-let dailyMissions=[], weeklyMissions=[];
-function generateMissions(){
-    const today = new Date().toDateString();
-    if(localStorage.getItem('rpgDailyDate')!==today){
-        dailyMissions = shuffle([...dailyBase]).slice(0,3);
-        localStorage.setItem('rpgDailyDate', today);
-    } else {
-        dailyMissions = JSON.parse(localStorage.getItem('rpgDaily')) || shuffle([...dailyBase]).slice(0,3);
-    }
-
-    const week = getWeekNumber(new Date());
-    if(localStorage.getItem('rpgWeeklyWeek')!==week){
-        weeklyMissions = shuffle([...weeklyBase]).slice(0,4);
-        localStorage.setItem('rpgWeeklyWeek', week);
-    } else {
-        weeklyMissions = JSON.parse(localStorage.getItem('rpgWeekly')) || shuffle([...weeklyBase]).slice(0,4);
-    }
+/* -------------------------
+   Utilities: pick random unique items
+   ------------------------- */
+function pickRandomUnique(pool, count){
+  const copy = pool.slice();
+  const out = [];
+  for(let i=0;i<count && copy.length>0;i++){
+    const idx = Math.floor(Math.random()*copy.length);
+    out.push(copy.splice(idx,1)[0]);
+  }
+  return out;
 }
 
-// ===== RENDERIZAR =====
-function renderMissions(){
-    const dailyEl = document.getElementById('dailyMissions');
-    dailyEl.innerHTML='';
-    dailyMissions.forEach(m=>{
-        let li = document.createElement('li');
-        let span = document.createElement('span'); span.textContent = m; span.className='mission-name';
-        let btn = document.createElement('button'); btn.textContent='Completar'; btn.onclick=()=>completeMission(m,true);
-        li.appendChild(span); li.appendChild(btn); dailyEl.appendChild(li);
-    });
+/* -------------------------
+   Regeneración diaria / semanal
+   ------------------------- */
+function ensureMissionsAreCurrent(){
+  const now = new Date();
+  const today = getDayOfYear(now) + '_' + now.getFullYear();
+  const week = getISOWeekNumber(now) + '_' + now.getFullYear();
 
-    const weeklyEl = document.getElementById('weeklyMissions');
-    weeklyEl.innerHTML='';
-    weeklyMissions.forEach(m=>{
-        let li = document.createElement('li');
-        let span = document.createElement('span'); span.textContent = m; span.className='mission-name';
-        let btn = document.createElement('button'); btn.textContent='Completar'; btn.onclick=()=>completeMission(m,false);
-        li.appendChild(span); li.appendChild(btn); weeklyEl.appendChild(li);
-    });
+  const savedDay = load('lastDay', null);
+  const savedWeek = load('lastWeek', null);
+
+  // If day changed -> regenerate daily missions (2-3)
+  if(savedDay !== today){
+    const count = Math.floor(Math.random()*2)+2; // 2 or 3
+    state.daily = pickRandomUnique(DAILY_POOL, count);
+    // store day marker
+    save('lastDay', today);
+    // save timestamp for potential expiration of temporary effects
+  }
+
+  // If week changed -> regenerate weekly missions (2)
+  if(savedWeek !== week){
+    state.weekly = pickRandomUnique(WEEKLY_POOL, 2);
+    save('lastWeek', week);
+  }
+
+  // If empty first time, ensure there are missions
+  if(!state.daily || state.daily.length === 0){
+    const count = Math.floor(Math.random()*2)+2;
+    state.daily = pickRandomUnique(DAILY_POOL, count);
+  }
+  if(!state.weekly || state.weekly.length === 0){
+    state.weekly = pickRandomUnique(WEEKLY_POOL, 2);
+  }
+
+  saveState();
 }
 
-// ===== COMPLETAR MISION =====
-function completeMission(m,isDaily){
-    let xp=0, me=0;
-    const match = m.match(/\((\+\d+) XP,? ?(\+\d+)? ME?\)/);
-    if(match){ xp = parseInt(match[1]); me = match[2]?parseInt(match[2]):0; }
-    stats.xp += xp; stats.me += me;
-    if(isDaily) dailyMissions = dailyMissions.filter(x=>x!==m);
-    else weeklyMissions = weeklyMissions.filter(x=>x!==m);
-    checkLevelUp(); saveProgress(); renderStats(); renderMissions();
-}
-
-// ===== SUBIDA DE NIVEL =====
+/* -------------------------
+   Nivel up check
+   ------------------------- */
 function checkLevelUp(){
-    while(stats.level<100){
-        let xpNeeded; if(stats.level<=20) xpNeeded=100; else if(stats.level<=50) xpNeeded=150;
-        else if(stats.level<=80) xpNeeded=200; else xpNeeded=225;
-        if(stats.xp>=xpNeeded){ stats.xp-=xpNeeded; stats.level++; stats.energy++; stats.focus++; alert('¡Subiste de nivel! Nivel '+stats.level); }
-        else break;
+  let leveled = false;
+  while(state.xp >= state.xpNeeded){
+    state.xp -= state.xpNeeded;
+    state.level += 1;
+    state.xpNeeded = xpForLevel(state.level);
+    leveled = true;
+    toast(`¡Subiste al nivel ${state.level}!`);
+  }
+  if(leveled) saveState();
+}
+
+/* -------------------------
+   UI rendering
+   ------------------------- */
+const area = document.getElementById('area');
+const tpl = {
+  profile: document.getElementById('profileTpl').content,
+  missions: document.getElementById('missionsTpl').content,
+  shop: document.getElementById('shopTpl').content,
+  inventory: document.getElementById('inventoryTpl').content,
+  skills: document.getElementById('skillsTpl').content
+};
+
+function renderProfile(){
+  area.innerHTML = '';
+  area.appendChild(document.importNode(tpl.profile, true));
+  document.getElementById('labelLevel').textContent = state.level;
+  document.getElementById('labelXP').textContent = `${state.xp} / ${state.xpNeeded}`;
+  const pct = Math.round((state.xp / state.xpNeeded)*100);
+  document.getElementById('progressBar').style.width = pct + '%';
+  document.getElementById('labelME').textContent = state.me;
+  // stats
+  document.getElementById('statMental').textContent = state.stats.mental;
+  document.getElementById('statDisciplina').textContent = state.stats.disciplina;
+  document.getElementById('statConcentracion').textContent = state.stats.concentracion;
+  document.getElementById('statCreatividad').textContent = state.stats.creatividad;
+  document.getElementById('statEnergia').textContent = state.stats.energia;
+
+  // buttons
+  document.getElementById('btnOpenMissions').onclick = ()=>{
+    setActiveTab('tabMissions'); renderMissions();
+  };
+  document.getElementById('btnOpenShop').onclick = ()=>{
+    setActiveTab('tabShop'); renderShop();
+  };
+
+  // dev simulation buttons (for testing)
+  document.getElementById('btnSimDay').onclick = ()=>{
+    // increment saved day so on next ensure1 call it will regenerate
+    const last = load('lastDay', null);
+    if(last){
+      // parse day_year
+      const [d,y] = last.split('_');
+      // try to increment day by 1: we just set lastDay to yesterday so ensureMissions will think it's new day
+      // simpler: set lastDay to a very old day to force regeneration
+      save('lastDay', '000_1970');
+    } else {
+      save('lastDay','000_1970');
     }
+    ensureMissionsAreCurrent(); saveState(); toast('Simulado: día avanzado. Misiones diarias regeneradas.'); renderMissions();
+  };
+
+  document.getElementById('btnSimWeek').onclick = ()=>{
+    save('lastWeek','0_1970');
+    ensureMissionsAreCurrent(); saveState(); toast('Simulado: semana avanzada. Misiones semanales regeneradas.'); renderMissions();
+  };
+
+  document.getElementById('btnReset').onclick = ()=>{
+    if(confirm('¿Resetear todos los datos y volver al inicio? Se perderán progresos.')) {
+      localStorage.clear();
+      location.reload();
+    }
+  };
 }
 
-// ===== RENDER STATS =====
-function renderStats(){
-    document.getElementById('level').textContent=stats.level;
-    document.getElementById('xp').textContent=stats.xp;
-    document.getElementById('me').textContent=stats.me;
-    document.getElementById('mental').textContent=stats.mental;
-    document.getElementById('discipline').textContent=stats.discipline;
-    document.getElementById('focus').textContent=stats.focus;
-    document.getElementById('creativity').textContent=stats.creativity;
-    document.getElementById('energy').textContent=stats.energy;
+function renderMissions(){
+  area.innerHTML = '';
+  area.appendChild(document.importNode(tpl.missions, true));
+  const dailyList = document.getElementById('dailyList');
+  const weeklyList = document.getElementById('weeklyList');
+  const specialList = document.getElementById('specialList');
+
+  // populate daily
+  dailyList.innerHTML = '';
+  state.daily.forEach((m, idx)=>{
+    const li = document.createElement('li');
+    li.innerHTML = `<div>
+        <div style="font-weight:600">${m.title}</div>
+        <div class="muted" style="font-size:13px">${m.info}</div>
+      </div>
+      <div style="text-align:right">
+        <div class="muted" style="font-size:13px">${m.xp} XP ${m.me ? ' · ' + m.me + ' ME' : ''}</div>
+        <div style="margin-top:8px;">
+          <button class="btn" data-type="daily" data-index="${idx}">Completar</button>
+        </div>
+      </div>`;
+    dailyList.appendChild(li);
+  });
+
+  // weekly
+  weeklyList.innerHTML = '';
+  state.weekly.forEach((m, idx)=>{
+    const li = document.createElement('li');
+    li.innerHTML = `<div>
+        <div style="font-weight:600">${m.title}</div>
+        <div class="muted" style="font-size:13px">${m.info}</div>
+      </div>
+      <div style="text-align:right">
+        <div class="muted" style="font-size:13px">${m.xp} XP ${m.me ? ' · ' + m.me + ' ME' : ''}</div>
+        <div style="margin-top:8px;">
+          <button class="btn" data-type="weekly" data-index="${idx}">Completar</button>
+        </div>
+      </div>`;
+    weeklyList.appendChild(li);
+  });
+
+  // specials
+  specialList.innerHTML = '';
+  state.specials.forEach((m, idx)=>{
+    const li = document.createElement('li');
+    li.innerHTML = `<div>
+        <div style="font-weight:600">${m.title}</div>
+        <div class="muted" style="font-size:13px">${m.info}</div>
+      </div>
+      <div style="text-align:right">
+        <div class="muted" style="font-size:13px">${m.xp} XP ${m.me ? ' · ' + m.me + ' ME' : ''}</div>
+        <div style="margin-top:8px;">
+          <button class="btn" data-type="special" data-index="${idx}">Completar</button>
+        </div>
+      </div>`;
+    specialList.appendChild(li);
+  });
+
+  // event delegation for complete buttons
+  area.querySelectorAll('button[data-type]').forEach(btn=>{
+    btn.onclick = (e)=>{
+      const type = btn.getAttribute('data-type');
+      const index = parseInt(btn.getAttribute('data-index'),10);
+      completeMission(type, index);
+    };
+  });
 }
 
-// ===== TIENDA =====
-function buyItem(name,cost){
-    if(stats.me>=cost){
-        stats.me-=cost;
-        if(name==='Poción de Enfoque') stats.me+=1;
-        if(name==='Snack Energético') stats.energy+=2;
-        if(name==='Café del Erudito') stats.focus+=1;
-        alert('Compraste '+name); saveProgress(); renderStats();
-    } else alert('No tienes suficiente ME');
+function renderShop(){
+  area.innerHTML = '';
+  area.appendChild(document.importNode(tpl.shop, true));
+  const shopItems = document.getElementById('shopItems');
+  shopItems.innerHTML = '';
+  TROPHIES.forEach(item=>{
+    const div = document.createElement('div');
+    div.className = 'shop-item';
+    const owned = state.inventory.includes(item.id);
+    div.innerHTML = `<div>
+        <div style="font-weight:600">${item.title}</div>
+        <div class="muted" style="font-size:13px">${item.desc}</div>
+      </div>
+      <div style="text-align:right">
+        <div class="muted" style="font-size:13px">${item.price} ME</div>
+        <div style="margin-top:8px;">
+          <button class="btn" data-id="${item.id}" ${owned ? 'disabled' : ''}>${owned ? 'Comprado' : 'Comprar'}</button>
+        </div>
+      </div>`;
+    shopItems.appendChild(div);
+  });
+  // attach handlers
+  shopItems.querySelectorAll('button[data-id]').forEach(b=>{
+    b.onclick = ()=>{
+      const id = b.getAttribute('data-id');
+      purchaseTrophy(id);
+    };
+  });
+  // show ME
+  const label = document.createElement('div');
+  label.className = 'muted';
+  label.style.marginTop = '10px';
+  label.innerHTML = `ME actual: <strong>${state.me}</strong>`;
+  shopItems.appendChild(label);
 }
 
-// ===== INICIALIZACIÓN =====
-loadProgress(); generateMissions(); renderMissions(); renderStats();
+function renderInventory(){
+  area.innerHTML = '';
+  area.appendChild(document.importNode(tpl.inventory, true));
+  const grid = document.getElementById('inventoryGrid');
+  grid.innerHTML = '';
+  if(state.inventory.length === 0){
+    grid.innerHTML = '<div class="muted">No tienes logros todavía. Compra trofeos en la Tienda.</div>';
+    return;
+  }
+  state.inventory.forEach(id=>{
+    const t = TROPHIES.find(x=>x.id===id);
+    if(!t) return;
+    const d = document.createElement('div');
+    d.className = 'trophy';
+    d.innerHTML = `<div style="font-weight:700">${t.title}</div><div class="muted" style="font-size:13px">${t.desc}</div><div style="margin-top:8px; font-size:13px; color:var(--muted)">Comprado</div>`;
+    grid.appendChild(d);
+  });
+}
+
+function renderSkills(){
+  area.innerHTML = '';
+  area.appendChild(document.importNode(tpl.skills, true));
+  const skillsList = document.getElementById('skillsList');
+  const skillsByLevel = [
+    {lvl:10, name:'Gestión del Tiempo I', desc:'Mejor planificación y productividad.'},
+    {lvl:20, name:'Súper Concentración I', desc:'Mayor tiempo efectivo de estudio.'},
+    {lvl:30, name:'Resumen Perfecto', desc:'Habilidad de sintetizar unidades.'},
+    {lvl:40, name:'Memoria Largo Plazo I', desc:'Mejora simbólica de retención.'},
+    {lvl:50, name:'Planificador Maestro', desc:'Organización avanzada de proyectos.'},
+    {lvl:60, name:'Concentración Inquebrantable', desc:'Más enfoque.'},
+    {lvl:70, name:'Gestión del Tiempo II', desc:'Optimización avanzada del calendario.'},
+    {lvl:80, name:'Memoria Largo Plazo II', desc:'Mejora de retención y repaso.'},
+    {lvl:90, name:'Sabiduría Avanzada', desc:'Habilidades combinadas.'},
+    {lvl:100, name:'SABIO SUPREMO', desc:'Título final: elección de habilidad.'}
+  ];
+  skillsByLevel.forEach(s=>{
+    const li = document.createElement('li');
+    const unlocked = state.level >= s.lvl;
+    li.innerHTML = `<div style="display:flex; justify-content:space-between; gap:12px;">
+      <div><strong>${s.name}</strong><div class="muted" style="font-size:13px">${s.desc}</div></div>
+      <div style="align-self:center">${unlocked ? '<small style="color:var(--success)">Desbloqueado</small>' : '<small class="muted">Nivel ' + s.lvl + '</small>'}</div>
+    </div>`;
+    skillsList.appendChild(li);
+  });
+}
+
+/* -------------------------
+   Mission completion
+   ------------------------- */
+function completeMission(type, index){
+  if(type === 'daily'){
+    const m = state.daily[index];
+    if(!m) return;
+    state.xp += m.xp;
+    state.me += (m.me||0);
+    // remove mission
+    state.daily.splice(index,1);
+    toast(`Misión diaria completada: +${m.xp} XP ${m.me ? '· +' + m.me + ' ME' : ''}`);
+    saveState(); checkLevelUp(); renderMissions(); renderTab('tabProfile'); // update profile values
+  } else if(type === 'weekly'){
+    const m = state.weekly[index];
+    if(!m) return;
+    state.xp += m.xp;
+    state.me += (m.me||0);
+    // remove mission: will not regenerate until week change (ensureMissionsAreCurrent handles regeneration)
+    state.weekly.splice(index,1);
+    toast(`Misión semanal completada: +${m.xp} XP ${m.me ? '· +' + m.me + ' ME' : ''}`);
+    saveState(); checkLevelUp(); renderMissions(); renderTab('tabProfile');
+  } else if(type === 'special'){
+    const m = state.specials[index];
+    if(!m) return;
+    state.xp += m.xp;
+    state.me += (m.me||0);
+    // specials: we'll remove the mission after completion to avoid repeat unless the app wants to keep it
+    state.specials.splice(index,1);
+    toast(`Misión especial completada: +${m.xp} XP ${m.me ? '· +' + m.me + ' ME' : ''}`);
+    saveState(); checkLevelUp(); renderMissions(); renderTab('tabProfile');
+  }
+  // update XP UI
+  updateProfileUI();
+}
+
+/* -------------------------
+   Purchase trophies
+   ------------------------- */
+function purchaseTrophy(id){
+  const item = TROPHIES.find(t=>t.id===id);
+  if(!item) return;
+  if(state.inventory.includes(id)){
+    toast('Ya lo posees.');
+    return;
+  }
+  if(state.me < item.price){
+    toast('No tienes suficientes ME.');
+    return;
+  }
+  state.me -= item.price;
+  state.inventory.push(id);
+  saveState();
+  toast(`Comprado: ${item.title}`);
+  renderShop();
+  renderInventory();
+  updateProfileUI();
+}
+
+/* -------------------------
+   UI helpers
+   ------------------------- */
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.display = 'block';
+  clearTimeout(t._t);
+  t._t = setTimeout(()=> t.style.display = 'none', 3000);
+}
+
+function updateProfileUI(){
+  // if profile is visible, update labels
+  const lv = document.getElementById('labelLevel');
+  if(lv) lv.textContent = state.level;
+  const lxp = document.getElementById('labelXP');
+  if(lxp) lxp.textContent = `${state.xp} / ${state.xpNeeded}`;
+  const lme = document.getElementById('labelME');
+  if(lme) lme.textContent = state.me;
+  const pb = document.getElementById('progressBar');
+  if(pb) pb.style.width = Math.round((state.xp/state.xpNeeded)*100) + '%';
+}
+
+/* -------------------------
+   Tabs navigation
+   ------------------------- */
+const tabs = ['tabProfile','tabMissions','tabShop','tabInventory','tabSkills'];
+tabs.forEach(id=>{
+  const el = document.getElementById(id);
+  el.onclick = ()=>{
+    setActiveTab(id);
+    if(id === 'tabProfile') renderProfile();
+    if(id === 'tabMissions') renderMissions();
+    if(id === 'tabShop') renderShop();
+    if(id === 'tabInventory') renderInventory();
+    if(id === 'tabSkills') renderSkills();
+  };
+});
+
+function setActiveTab(id){
+  tabs.forEach(t=>{
+    const el = document.getElementById(t);
+    if(el) el.classList.toggle('active', t===id);
+  });
+  // update URL hash maybe
+  location.hash = id;
+}
+
+function renderTab(id){
+  // switcher used in code to show profile after actions
+  const map = {
+    'tabProfile': ()=>renderProfile(),
+    'tabMissions': ()=>renderMissions(),
+    'tabShop': ()=>renderShop(),
+    'tabInventory': ()=>renderInventory(),
+    'tabSkills': ()=>renderSkills()
+  };
+  if(map[id]) map[id]();
+}
+
+/* -------------------------
+   Init app
+   ------------------------- */
+function init(){
+  // load or set defaults
+  loadState();
+  ensureMissionsAreCurrent();
+
+  // initial UI: profile
+  renderProfile();
+
+  // update saved UI if mission regen happened
+  updateProfileUI();
+
+  // if there's a hash, go to that tab
+  const hash = location.hash.replace('#','');
+  if(hash && tabs.includes(hash)) {
+    setActiveTab(hash);
+    renderTab(hash);
+  }
+}
+
+// run on load
+init();
+
+/* -------------------------
+   Save state periodically (autosave) - good hygiene
+   ------------------------- */
+setInterval(()=> saveState(), 5000);
+
 </script>
-
 </body>
 </html>
+
+
