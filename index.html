@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RPG Educativo - 1º Bachillerato</title>
+<style>
+body { font-family: Arial, sans-serif; margin:0; padding:0; background:#f4f6fa; }
+header { background:#4a90e2; color:white; text-align:center; padding:15px; }
+.container { padding:15px; }
+.card { background:white; border-radius:10px; padding:15px; margin-bottom:15px; box-shadow:0 3px 6px rgba(0,0,0,0.1);}
+button { padding:8px 14px; margin:5px; border:none; border-radius:6px; background:#4a90e2; color:white; cursor:pointer; }
+button:hover { background:#357ABD; }
+h2,h3 { margin:8px 0; }
+ul { list-style:none; padding:0;}
+li { margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; }
+.mission-name { flex:1; margin-right:10px; }
+</style>
+</head>
+<body>
+
+<header>
+<h1>RPG Educativo</h1>
+<p>Nivel <span id="level">1</span> | XP <span id="xp">0</span> | ME <span id="me">0</span></p>
+</header>
+
+<div class="container">
+
+<div class="card">
+<h2>Stats del Personaje</h2>
+<p>Fuerza Mental: <span id="mental">5</span></p>
+<p>Disciplina: <span id="discipline">4</span></p>
+<p>Concentración: <span id="focus">3</span></p>
+<p>Creatividad: <span id="creativity">6</span></p>
+<p>Energía: <span id="energy">10</span></p>
+</div>
+
+<div class="card">
+<h2>Misiones Diarias</h2>
+<ul id="dailyMissions"></ul>
+</div>
+
+<div class="card">
+<h2>Misiones Semanales</h2>
+<ul id="weeklyMissions"></ul>
+</div>
+
+<div class="card">
+<h2>Tienda de Consumibles</h2>
+<button onclick="buyItem('Poción de Enfoque',10)">Poción de Enfoque (+1 ME) - 10 ME</button>
+<button onclick="buyItem('Snack Energético',5)">Snack Energético (+2 Energía) - 5 ME</button>
+<button onclick="buyItem('Café del Erudito',8)">Café del Erudito (+1 Concentración) - 8 ME</button>
+</div>
+
+</div>
+
+<script>
+// ===== PERSONAJE =====
+let stats = {
+    level:1, xp:0, me:0,
+    mental:5, discipline:4, focus:3, creativity:6, energy:10
+};
+
+// ===== MISIONES =====
+const dailyBase = [
+"Revisión rápida de 15 min (+10 XP, +1 ME)",
+"Orden del escritorio o mochila (+8 XP)",
+"Hacer 5 ejercicios extra (+15 XP, +1 ME)",
+"Leer 10 páginas (+12 XP)",
+"Mini-resumen de 5 líneas (+12 XP)",
+"Repasar apuntes de una asignatura (+10 XP)",
+"Resolver dudas pendientes (+14 XP)",
+"Preparar la agenda del día (+8 XP)",
+"Repasar fórmulas importantes (+10 XP)",
+"Leer un artículo educativo (+12 XP)",
+"Hacer una actividad de memoria (+10 XP)",
+"Practicar problemas de cálculo (+15 XP)"
+];
+
+const weeklyBase = [
+"Mejorar algún trabajo o deberes (+25 XP, +2 ME)",
+"Autoexamen de 10 preguntas (+35 XP, +2 ME)",
+"Mapa mental de un tema (+30 XP)",
+"Hacer resúmenes de alguna asignatura (+35 XP)",
+"Estudiar 2 horas acumuladas (+50 XP)",
+"Completar un trabajo largo pendiente (+45 XP)",
+"Revisión profunda de exámenes pasados (+45 XP)"
+];
+
+// ===== GUARDADO =====
+function saveProgress(){
+    localStorage.setItem('rpgStats', JSON.stringify(stats));
+    localStorage.setItem('rpgDaily', JSON.stringify(dailyMissions));
+    localStorage.setItem('rpgWeekly', JSON.stringify(weeklyMissions));
+}
+function loadProgress(){
+    const savedStats = JSON.parse(localStorage.getItem('rpgStats'));
+    if(savedStats) stats = savedStats;
+}
+
+// ===== AUXILIARES =====
+function shuffle(array){ return array.sort(()=>Math.random()-0.5); }
+function getWeekNumber(d){
+    d = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    d.setHours(0,0,0,0);
+    d.setDate(d.getDate()+4-(d.getDay()||7));
+    let yearStart = new Date(d.getFullYear(),0,1);
+    return Math.ceil((((d - yearStart)/86400000)+1)/7);
+}
+
+// ===== GENERAR MISIONES =====
+let dailyMissions=[], weeklyMissions=[];
+function generateMissions(){
+    const today = new Date().toDateString();
+    if(localStorage.getItem('rpgDailyDate')!==today){
+        dailyMissions = shuffle([...dailyBase]).slice(0,3);
+        localStorage.setItem('rpgDailyDate', today);
+    } else {
+        dailyMissions = JSON.parse(localStorage.getItem('rpgDaily')) || shuffle([...dailyBase]).slice(0,3);
+    }
+
+    const week = getWeekNumber(new Date());
+    if(localStorage.getItem('rpgWeeklyWeek')!==week){
+        weeklyMissions = shuffle([...weeklyBase]).slice(0,4);
+        localStorage.setItem('rpgWeeklyWeek', week);
+    } else {
+        weeklyMissions = JSON.parse(localStorage.getItem('rpgWeekly')) || shuffle([...weeklyBase]).slice(0,4);
+    }
+}
+
+// ===== RENDERIZAR =====
+function renderMissions(){
+    const dailyEl = document.getElementById('dailyMissions');
+    dailyEl.innerHTML='';
+    dailyMissions.forEach(m=>{
+        let li = document.createElement('li');
+        let span = document.createElement('span'); span.textContent = m; span.className='mission-name';
+        let btn = document.createElement('button'); btn.textContent='Completar'; btn.onclick=()=>completeMission(m,true);
+        li.appendChild(span); li.appendChild(btn); dailyEl.appendChild(li);
+    });
+
+    const weeklyEl = document.getElementById('weeklyMissions');
+    weeklyEl.innerHTML='';
+    weeklyMissions.forEach(m=>{
+        let li = document.createElement('li');
+        let span = document.createElement('span'); span.textContent = m; span.className='mission-name';
+        let btn = document.createElement('button'); btn.textContent='Completar'; btn.onclick=()=>completeMission(m,false);
+        li.appendChild(span); li.appendChild(btn); weeklyEl.appendChild(li);
+    });
+}
+
+// ===== COMPLETAR MISION =====
+function completeMission(m,isDaily){
+    let xp=0, me=0;
+    const match = m.match(/\((\+\d+) XP,? ?(\+\d+)? ME?\)/);
+    if(match){ xp = parseInt(match[1]); me = match[2]?parseInt(match[2]):0; }
+    stats.xp += xp; stats.me += me;
+    if(isDaily) dailyMissions = dailyMissions.filter(x=>x!==m);
+    else weeklyMissions = weeklyMissions.filter(x=>x!==m);
+    checkLevelUp(); saveProgress(); renderStats(); renderMissions();
+}
+
+// ===== SUBIDA DE NIVEL =====
+function checkLevelUp(){
+    while(stats.level<100){
+        let xpNeeded; if(stats.level<=20) xpNeeded=100; else if(stats.level<=50) xpNeeded=150;
+        else if(stats.level<=80) xpNeeded=200; else xpNeeded=225;
+        if(stats.xp>=xpNeeded){ stats.xp-=xpNeeded; stats.level++; stats.energy++; stats.focus++; alert('¡Subiste de nivel! Nivel '+stats.level); }
+        else break;
+    }
+}
+
+// ===== RENDER STATS =====
+function renderStats(){
+    document.getElementById('level').textContent=stats.level;
+    document.getElementById('xp').textContent=stats.xp;
+    document.getElementById('me').textContent=stats.me;
+    document.getElementById('mental').textContent=stats.mental;
+    document.getElementById('discipline').textContent=stats.discipline;
+    document.getElementById('focus').textContent=stats.focus;
+    document.getElementById('creativity').textContent=stats.creativity;
+    document.getElementById('energy').textContent=stats.energy;
+}
+
+// ===== TIENDA =====
+function buyItem(name,cost){
+    if(stats.me>=cost){
+        stats.me-=cost;
+        if(name==='Poción de Enfoque') stats.me+=1;
+        if(name==='Snack Energético') stats.energy+=2;
+        if(name==='Café del Erudito') stats.focus+=1;
+        alert('Compraste '+name); saveProgress(); renderStats();
+    } else alert('No tienes suficiente ME');
+}
+
+// ===== INICIALIZACIÓN =====
+loadProgress(); generateMissions(); renderMissions(); renderStats();
+</script>
+
+</body>
+</html>
