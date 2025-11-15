@@ -1,503 +1,737 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>StudyQuest</title>
+<title>SabioQuest — App de estudio</title>
 <style>
   :root{
-    --bg:#070709;
-    --panel:#0f1113;
-    --muted:#9aa3b2;
-    --accent:#2f82f6; /* azul suave */
-    --card:#121316;
-    --tile-border:#202226;
-    --btn:#2f6fe0;
-    --btn-press:#2357b2;
-    --glass: rgba(255,255,255,0.02);
+    --bg:#f4f6f8; --card:#fff; --accent:#3b82f6; --muted:#666; --success:#10b981;
   }
-  *{box-sizing:border-box}
-  html,body{height:100%;margin:0;background:var(--bg);color:#e6eef8;font-family:Inter,Arial,Helvetica,sans-serif;-webkit-font-smoothing:antialiased}
-  header{padding:14px 16px;background:linear-gradient(180deg,#0d0f11,#070709);border-bottom:1px solid rgba(255,255,255,0.02)}
+  body{font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; margin:0; background:var(--bg); color:#111;}
+  header{background:linear-gradient(90deg,#2563eb,#60a5fa); color:white; padding:18px 20px; display:flex; align-items:center; justify-content:space-between;}
   header h1{margin:0;font-size:18px}
-  header .sub{margin-top:6px;color:var(--muted);font-size:13px}
-  .app{padding:12px;padding-bottom:92px;max-width:920px;margin:0 auto}
-  .card{background:linear-gradient(180deg,var(--panel), #0c0d0f);border-radius:12px;padding:12px;margin-bottom:12px;border:1px solid var(--tile-border)}
-  .row{display:flex;gap:10px;align-items:center}
-  .col{display:flex;flex-direction:column;gap:8px}
-  .small{font-size:13px;color:var(--muted)}
-  .big{font-weight:600;font-size:16px}
-  .xpbar{height:12px;background:#060607;border-radius:10px;overflow:hidden;border:1px solid #0f1113}
-  .xpbar > i{display:block;height:100%;background:linear-gradient(90deg,var(--accent), #7dd3fc);width:0%;transition:width 600ms cubic-bezier(.2,.9,.3,1)}
-  button.btn{display:inline-block;background:var(--btn);border:none;color:white;padding:10px 12px;border-radius:10px;font-size:15px;cursor:pointer}
-  button.btn:active{background:var(--btn-press)}
-  .muted{color:var(--muted)}
-  ul.list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:10px}
-  li.mission{background:var(--card);padding:12px;border-radius:10px;border:1px solid var(--tile-border);display:flex;justify-content:space-between;align-items:flex-start}
-  .mission .meta{color:var(--muted);font-size:13px;margin-top:6px}
-  .nav{position:fixed;left:0;right:0;bottom:0;height:72px;background:#09090b;border-top:1px solid #0f1113;display:flex;justify-content:space-around;align-items:center;padding:8px 6px;z-index:40}
-  .nav button{background:none;border:none;color:var(--muted);font-size:13px;display:flex;flex-direction:column;align-items:center;gap:4px}
-  .nav button.active{color:var(--accent)}
-  .hidden{display:none}
-  input[type="number"], input[type="text"]{width:100%;padding:10px;border-radius:8px;border:1px solid #222;background:#07080a;color:#fff}
-  .badge{background:#0f1724;color:#9dd3ff;padding:6px 8px;border-radius:999px;font-weight:600}
-  .muted-btn{background:transparent;border:1px solid #222;padding:8px 10px;border-radius:8px;color:var(--muted)}
-  .section-title{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
-  .center{display:flex;justify-content:center;align-items:center}
-  @media(min-width:720px){.app{padding:20px}}
+  main{padding:18px; max-width:980px; margin:18px auto;}
+  .grid{display:grid; gap:14px; grid-template-columns:1fr 320px;}
+  .card{background:var(--card); border-radius:10px; padding:14px; box-shadow:0 6px 18px rgba(20,20,40,0.06);}
+  .btn{background:var(--accent); color:white; border:none; padding:8px 12px; border-radius:8px; cursor:pointer;}
+  .btn.secondary{background:#e5e7eb; color:#111;}
+  .row{display:flex; gap:8px; align-items:center;}
+  .muted{color:var(--muted); font-size:13px;}
+  .progressWrap{background:#eef2ff; height:16px; border-radius:999px; overflow:hidden;}
+  .progressBar{height:100%; background:linear-gradient(90deg,var(--accent),#60a5fa); width:0%;}
+  nav{display:flex; gap:8px; margin-bottom:12px;}
+  nav button{background:transparent; border:1px solid transparent; padding:8px 12px; border-radius:8px; cursor:pointer;}
+  nav button.active{background:var(--accent); color:white;}
+  ul.missions{list-style:none; padding:0; margin:8px 0;}
+  ul.missions li{display:flex; justify-content:space-between; align-items:center; padding:8px; border-radius:8px; background:#fafafa; margin-bottom:8px;}
+  small.tag{background:#eef2f6; padding:4px 8px; border-radius:999px; font-size:12px;}
+  .shop-item{display:flex; justify-content:space-between; align-items:center; padding:8px; border-radius:8px; background:#fafafa; margin-bottom:8px;}
+  .inventory-grid{display:flex; flex-wrap:wrap; gap:8px;}
+  .trophy{background:linear-gradient(180deg,#fff6e5,#fff9f0); padding:8px; border-radius:8px; min-width:140px; box-shadow:0 4px 10px rgba(0,0,0,0.04);}
+  footer{margin-top:18px; text-align:center; color:var(--muted); font-size:13px;}
+  .small-muted{font-size:12px; color:var(--muted);}
+  .notif{position:fixed; right:18px; bottom:18px; background:#111; color:white; padding:10px 14px; border-radius:8px; opacity:0.95;}
+  .devPanel{margin-top:12px; padding:8px; border-radius:8px; background:#fff; box-shadow:inset 0 0 0 1px #f1f1f1;}
+  @media (max-width:900px){ .grid{grid-template-columns:1fr;} .card{padding:12px;} }
 </style>
 </head>
 <body>
-  <header>
-    <div style="display:flex;justify-content:space-between;align-items:center;">
-      <div>
-        <h1>StudyQuest</h1>
-        <div class="sub">Tu RPG de estudio — 1º Bachillerato</div>
-      </div>
-      <div style="text-align:right">
-        <div class="small">Nivel <span id="ui-level">1</span></div>
-        <div class="small">ME <span id="ui-me">0</span></div>
-      </div>
-    </div>
-  </header>
+<header>
+  <h1>SabioQuest</h1>
+  <div style="font-size:14px; opacity:0.95">Tu juego de estudio — ¡sube a Sabio 100!</div>
+</header>
 
-  <main class="app">
-    <!-- MISIÓNES -->
-    <section id="sec-mis" class="card section">
-      <div class="section-title"><h3 style="margin:0">Misiones diarias</h3>
-        <div class="small">Hoy: <span id="ui-date">—</span></div>
-      </div>
-      <ul id="daily-list" class="list"></ul>
-
-      <div style="height:12px"></div>
-      <div class="section-title"><h3 style="margin:0">Misiones semanales</h3>
-        <div class="small">Semana de: <span id="ui-weekstart">—</span></div>
-      </div>
-      <ul id="weekly-list" class="list"></ul>
-    </section>
-
-    <!-- PERSONAJE -->
-    <section id="sec-char" class="card section hidden">
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <div>
-          <div class="small">Nivel</div>
-          <div class="big" id="char-level">1</div>
-        </div>
-        <div style="flex:1;margin-left:12px">
-          <div class="small">Progreso</div>
-          <div class="xpbar" style="margin-top:6px"><i id="xp-fill" style="width:0%"></i></div>
-          <div style="display:flex;justify-content:space-between;margin-top:6px">
-            <div class="muted small">XP <span id="char-xp">0</span>/<span id="char-xpmax">100</span></div>
-            <div class="muted small">ME <span id="char-me">0</span></div>
-          </div>
-        </div>
-      </div>
-
-      <div style="height:12px"></div>
-      <div class="row" style="gap:12px">
-        <div style="flex:1"><div class="small">Fuerza mental</div><div class="big" id="stat-mental">5</div></div>
-        <div style="flex:1"><div class="small">Disciplina</div><div class="big" id="stat-discipline">4</div></div>
-        <div style="flex:1"><div class="small">Concentración</div><div class="big" id="stat-focus">3</div></div>
-      </div>
-
-      <div style="height:12px"></div>
-      <div class="row" style="gap:12px">
-        <div style="flex:1"><div class="small">Creatividad</div><div class="big" id="stat-creativity">6</div></div>
-        <div style="flex:1"><div class="small">Energía</div><div class="big" id="stat-energy">10</div></div>
-      </div>
-    </section>
-
-    <!-- TIENDA -->
-    <section id="sec-shop" class="card section hidden">
-      <div class="section-title"><h3 style="margin:0">Tienda</h3><div class="small">ME disponibles: <span id="shop-me">0</span></div></div>
-
-      <div class="card">
-        <div style="display:flex;justify-content:space-between;align-items:center">
-          <div>
-            <div class="big">Poción de Enfoque</div>
-            <div class="small">Efecto: +1 ME (inmediato)</div>
-          </div>
-          <div style="text-align:right">
-            <div class="badge">10 ME</div>
-            <div style="height:8px"></div>
-            <button class="btn" onclick="buyItem('focus')">Comprar</button>
-          </div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div style="display:flex;justify-content:space-between;align-items:center">
-          <div>
-            <div class="big">Snack energético</div>
-            <div class="small">Efecto: +2 Energía</div>
-          </div>
-          <div style="text-align:right">
-            <div class="badge">5 ME</div>
-            <div style="height:8px"></div>
-            <button class="btn" onclick="buyItem('snack')">Comprar</button>
-          </div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div style="display:flex;justify-content:space-between;align-items:center">
-          <div>
-            <div class="big">Café del Erudito</div>
-            <div class="small">Efecto: +1 Concentración</div>
-          </div>
-          <div style="text-align:right">
-            <div class="badge">8 ME</div>
-            <div style="height:8px"></div>
-            <button class="btn" onclick="buyItem('cafe')">Comprar</button>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- EXÁMENES -->
-    <section id="sec-exams" class="card section hidden">
-      <div class="section-title"><h3 style="margin:0">Exámenes</h3>
-        <div class="small">Introduce nota (0–10)</div>
-      </div>
-
-      <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px;flex-wrap:wrap">
-        <input id="exam-subject" placeholder="Asignatura (opcional)" type="text" style="flex:2;min-width:140px" />
-        <input id="exam-grade" type="number" min="0" max="10" step="0.1" placeholder="Nota (0-10)" style="flex:1;min-width:90px" />
-        <button class="btn" onclick="registerExam()">Registrar</button>
-      </div>
-
-      <div class="small muted">Historial de exámenes (los más recientes arriba)</div>
-      <ul id="exam-list" class="list" style="margin-top:10px"></ul>
-    </section>
-
-    <!-- LOGROS -->
-    <section id="sec-logs" class="card section hidden">
-      <h3 style="margin-top:0">Logros & Estadísticas</h3>
-      <div class="small">Misiones completadas totales: <span id="stat-total-missions">0</span></div>
-      <div class="small">XP total acumulada: <span id="stat-total-xp">0</span></div>
-      <div style="height:8px"></div>
-      <div class="small">Exámenes registrados: <span id="stat-exams-count">0</span></div>
-    </section>
-
-  </main>
-
-  <nav class="nav" aria-label="Navegación">
-    <button id="tab-mis" class="active" onclick="showTab('sec-mis', this)"><div>🏹</div><div>Misiones</div></button>
-    <button id="tab-char" onclick="showTab('sec-char', this)"><div>🧍</div><div>Personaje</div></button>
-    <button id="tab-shop" onclick="showTab('sec-shop', this)"><div>🏪</div><div>Tienda</div></button>
-    <button id="tab-ex" onclick="showTab('sec-exams', this)"><div>📘</div><div>Exámenes</div></button>
-    <button id="tab-log" onclick="showTab('sec-logs', this)"><div>📊</div><div>Logros</div></button>
+<main>
+  <nav>
+    <button id="tabProfile" class="active">Ficha</button>
+    <button id="tabMissions">Misiones</button>
+    <button id="tabShop">Tienda (Logros)</button>
+    <button id="tabInventory">Logros</button>
+    <button id="tabSkills">Habilidades</button>
   </nav>
 
+  <section id="area">
+    <!-- content injected by JS -->
+  </section>
+
+  <footer class="small-muted">Hecho con <strong>SabioQuest</strong> — guarda, completa misiones y mejora cada día.</footer>
+</main>
+
+<!-- Templates hidden -->
+<template id="profileTpl">
+  <div class="grid">
+    <div class="card">
+      <h2>Ficha del peregrino</h2>
+      <div style="display:flex; gap:12px; align-items:center; margin-top:8px;">
+        <div style="width:76px; height:76px; border-radius:12px; background:linear-gradient(180deg,#fff,#f3f4f6); display:flex; align-items:center; justify-content:center; font-weight:700; color:#111;">P</div>
+        <div>
+          <div style="font-size:18px; font-weight:600;">Peregrino del Conocimiento</div>
+          <div class="muted">Clase: Académico Novato</div>
+        </div>
+      </div>
+
+      <div style="margin-top:12px;">
+        <div class="row" style="justify-content:space-between;">
+          <div><strong>Nivel</strong></div>
+          <div id="labelLevel">1</div>
+        </div>
+        <div style="margin-top:8px;">
+          <div class="row" style="justify-content:space-between;">
+            <div class="muted">XP</div><div id="labelXP" class="muted">0 / 100</div>
+          </div>
+          <div class="progressWrap" style="margin-top:8px;"><div id="progressBar" class="progressBar"></div></div>
+        </div>
+        <div style="margin-top:12px;">
+          <div class="row" style="justify-content:space-between;">
+            <div><strong>ME</strong> <span class="muted"> (Monedas de Estudio)</span></div>
+            <div id="labelME">20</div>
+          </div>
+        </div>
+
+        <div style="margin-top:12px;" class="row">
+          <button id="btnOpenMissions" class="btn">Ir a misiones</button>
+          <button id="btnOpenShop" class="btn secondary">Tienda</button>
+        </div>
+
+        <div class="devPanel small-muted">
+          <div style="font-weight:600; margin-bottom:6px;">Panel de prueba (solo para testing)</div>
+          <div class="row">
+            <button id="btnSimDay" class="btn secondary">Simular +1 día</button>
+            <button id="btnSimWeek" class="btn secondary">Simular +1 semana</button>
+            <button id="btnReset" class="btn secondary">Reset total</button>
+          </div>
+          <div style="margin-top:8px;" class="muted">Usa simuladores para probar regeneración diaria/semanal.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Estadísticas</h3>
+      <div style="display:grid; gap:8px; margin-top:8px;">
+        <div><strong>Fuerza mental:</strong> <span id="statMental">5</span></div>
+        <div><strong>Disciplina:</strong> <span id="statDisciplina">4</span></div>
+        <div><strong>Concentración:</strong> <span id="statConcentracion">3</span></div>
+        <div><strong>Creatividad:</strong> <span id="statCreatividad">6</span></div>
+        <div><strong>Energía diaria:</strong> <span id="statEnergia">10</span></div>
+      </div>
+      <hr style="margin:12px 0;">
+      <h4>Progreso a objetivos</h4>
+      <div style="display:flex; gap:8px; flex-direction:column;">
+        <div><small class="muted">Nivel 10: Gestión del Tiempo I (habilidad desbloqueada)</small></div>
+        <div style="height:8px; background:#f1f5f9; border-radius:8px;"><div style="width:42%; height:100%; background:linear-gradient(90deg,var(--accent),#60a5fa); border-radius:8px;"></div></div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<template id="missionsTpl">
+  <div class="card" style="margin-bottom:12px;">
+    <h2>Misiones diarias</h2>
+    <div class="muted">Se generan 2–3 al día y se reemplazan automáticamente al pasar el día.</div>
+    <ul class="missions" id="dailyList"></ul>
+  </div>
+
+  <div class="card" style="margin-top:12px;">
+    <h2>Misiones semanales</h2>
+    <div class="muted">Se generan 2 cada semana. Se reemplazan al cambiar la semana.</div>
+    <ul class="missions" id="weeklyList"></ul>
+  </div>
+
+  <div class="card" style="margin-top:12px;">
+    <h2>Misiones especiales</h2>
+    <div class="muted">Estas son fijas y no se regeneran automáticamente.</div>
+    <ul class="missions" id="specialList"></ul>
+  </div>
+</template>
+
+<template id="shopTpl">
+  <div class="card">
+    <h2>Tienda — Logros y Trofeos</h2>
+    <div class="muted">Compra trofeos con tus ME. Los trofeos se muestran en 'Logros'.</div>
+    <div style="margin-top:10px;" id="shopItems"></div>
+  </div>
+</template>
+
+<template id="inventoryTpl">
+  <div class="card">
+    <h2>Tus logros</h2>
+    <div class="muted">Trofeos y logros que has comprado o desbloqueado.</div>
+    <div class="inventory-grid" id="inventoryGrid" style="margin-top:10px;"></div>
+  </div>
+</template>
+
+<template id="skillsTpl">
+  <div class="card">
+    <h2>Habilidades</h2>
+    <div class="muted">Habilidades desbloqueadas por nivel.</div>
+    <ul id="skillsList" style="margin-top:12px;"></ul>
+  </div>
+</template>
+
+<!-- Notification -->
+<div id="toast" class="notif" style="display:none;"></div>
+
 <script>
-/* StudyQuest - single-file final
-   - Dark elegant
-   - Daily missions 1/day (2-3)
-   - Weekly missions every Monday (3-4)
-   - Full localStorage save (key 'sq_state_v2')
-   - Exams history with XP/ME rewards per grade
-   - No delete button, no day-sim
+/*
+  SabioQuest - Single-file web app
+  - Usa localStorage para persistencia
+  - Genera misiones diarias/semana automáticamente al cargar
+  - Permite completar misiones, comprar logros con ME y ver logros
+  - Español UI
 */
 
-// ---------- Base data ----------
-const DAILY_BASE = [
-  {name:"Revisión rápida de 15 min", xp:10, me:1},
-  {name:"Orden del escritorio o mochila", xp:8, me:0},
-  {name:"Hacer 5 ejercicios extra", xp:15, me:1},
-  {name:"Leer 10 páginas", xp:12, me:0},
-  {name:"Mini-resumen de 5 líneas", xp:12, me:0},
-  {name:"Repasar apuntes", xp:10, me:0},
-  {name:"Resolver dudas pendientes", xp:14, me:0},
-  {name:"Preparar la agenda", xp:8, me:0},
-  {name:"Repasar fórmulas", xp:10, me:0},
-  {name:"Leer un artículo educativo", xp:12, me:0},
-  {name:"Actividad de memoria", xp:10, me:0},
-  {name:"Practicar problemas de cálculo", xp:15, me:0},
+/* -------------------------
+   Config inicial / Pools
+   ------------------------- */
+const DAILY_POOL = [
+  {id:'d1', title:'Revisión rápida de 15 min', xp:10, me:1, info:'Repasar 15 minutos un tema ya visto.'},
+  {id:'d2', title:'Orden del escritorio o mochila', xp:8, me:0, info:'Organizar tus apuntes y material.'},
+  {id:'d3', title:'Hacer 5 ejercicios extra', xp:15, me:1, info:'Resolver 5 ejercicios del tema.'},
+  {id:'d4', title:'Leer 10 páginas', xp:12, me:0, info:'Lectura de 10 páginas de libro o apuntes.'},
+  {id:'d5', title:'Mini-resumen de 5 líneas', xp:12, me:0, info:'Escribe un resumen corto del tema.'},
+  {id:'d6', title:'Repasar apuntes de una asignatura', xp:10, me:0, info:'Repasar apuntes recientes.'},
+  {id:'d7', title:'Resolver dudas pendientes', xp:14, me:0, info:'Aclarar dudas que tienes en el cuaderno.'},
+  {id:'d8', title:'Preparar la agenda del día', xp:8, me:0, info:'Planificar las tareas del día.'},
+  {id:'d9', title:'Repasar fórmulas importantes', xp:10, me:0, info:'Repaso de fórmulas clave.'},
+  {id:'d10', title:'Leer un artículo educativo', xp:12, me:0, info:'Leer un artículo o blog educativo.'},
+  {id:'d11', title:'Hacer una actividad de memoria', xp:10, me:0, info:'Ejercicio breve de memoria (flashcards).'},
+  {id:'d12', title:'Enseñar a un amigo 10 min', xp:20, me:1, info:'Explica un concepto a otra persona.'},
+  {id:'d13', title:'Escribir 5 flashcards', xp:12, me:0, info:'Crear tarjetas de repaso.'},
+  {id:'d14', title:'Practicar problemas de cálculo', xp:15, me:0, info:'Resolver problemas de cálculo.'},
+  {id:'d15', title:'Escuchar un podcast educativo 20min', xp:12, me:0, info:'Escuchar contenido educativo.'}
 ];
 
-const WEEKLY_BASE = [
-  {name:"Mejorar un trabajo", xp:25, me:2},
-  {name:"Autoexamen 10 preguntas", xp:35, me:2},
-  {name:"Mapa mental", xp:30, me:0},
-  {name:"Resúmenes de asignatura", xp:35, me:0},
-  {name:"Estudiar 2 horas acumuladas", xp:50, me:0},
-  {name:"Trabajo largo pendiente", xp:45, me:0},
-  {name:"Revisión profunda de exámenes", xp:45, me:0},
+const WEEKLY_POOL = [
+  {id:'w1', title:'Desafío de comprensión', xp:30, me:3, info:'Estudia 1 hora un tema complejo y resume.'},
+  {id:'w2', title:'Mejorador de deberes', xp:25, me:2, info:'Entrega una tarea revisada y mejorada.'},
+  {id:'w3', title:'Proyecto del peregrino', xp:40, me:4, info:'Avanza claramente en un proyecto.'},
+  {id:'w4', title:'Autoexamen de 10 preguntas', xp:35, me:2, info:'Crea y haz un test propio.'},
+  {id:'w5', title:'Mapa mental de un tema', xp:30, me:0, info:'Crear un mapa mental.'},
+  {id:'w6', title:'Organizar apuntes de la semana', xp:35, me:0, info:'Ordenar y resumir la semana.'},
+  {id:'w7', title:'Estudiar 2 horas acumuladas', xp:50, me:0, info:'Sumar 2h de estudio durante la semana.'},
+  {id:'w8', title:'Completar un trabajo pendiente', xp:45, me:0, info:'Finalizar trabajo atrasado.'},
+  {id:'w9', title:'Sesión de estudio en biblioteca', xp:40, me:0, info:'Estudiar en ambiente serio.'},
+  {id:'w10', title:'Preparar una presentación corta', xp:38, me:2, info:'Crear y ensayar presentación corta.'},
+  {id:'w11', title:'Revisión de exámenes pasados', xp:45, me:0, info:'Repasar exámenes previos.'}
 ];
 
-// ---------- Storage ----------
-const STORAGE_KEY = 'sq_state_v2';
+const SPECIALS = [
+  {id:'s1', title:'Mini-examen personal 15 preguntas', xp:60, me:5, info:'Simula 15 preguntas.'},
+  {id:'s2', title:'Guardia del conocimiento (90 min)', xp:70, me:0, info:'90 min de estudio sin distracciones.'},
+  {id:'s3', title:'Maratón 2 horas', xp:80, me:0, info:'2 horas concentradas.'},
+  {id:'s4', title:'Explicar un tema a alguien', xp:50, me:0, info:'Enseñar a otra persona.'},
+  {id:'s5', title:'Resumen maestro de unidad', xp:65, me:0, info:'Resumen completo de la unidad.'},
+  {id:'s6', title:'Simulación de examen (1 h)', xp:90, me:10, info:'Simula un examen real.'}
+];
+
+const TROPHIES = [
+  {id:'t1', title:'Trofeo del Primer Paso', price:15, desc:'Recuerdo del comienzo de tu aventura.'},
+  {id:'t2', title:'Medalla de la Constancia', price:40, desc:'Has sido constante.'},
+  {id:'t3', title:'Insignia de la Concentración', price:80, desc:'Para grandes sesiones de estudio.'},
+  {id:'t4', title:'Cetro de la Memoria', price:150, desc:'Mejora simbólica de memoria.'},
+  {id:'t5', title:'Corona del Sabio', price:300, desc:'Trofeo épico para ahorrar y presumir.'}
+];
+
+/* -------------------------
+   Storage keys & helpers
+   ------------------------- */
+const KEY = (k)=> `sabio_${k}`;
+
+function save(k, v){ localStorage.setItem(KEY(k), JSON.stringify(v)); }
+function load(k, fallback=null){
+  const v = localStorage.getItem(KEY(k));
+  return v ? JSON.parse(v) : fallback;
+}
+
+/* -------------------------
+   Nivel / XP table
+   ------------------------- */
+function xpForLevel(level){
+  if(level <= 10) return 100;
+  if(level <= 20) return 150;
+  if(level <= 40) return 200;
+  if(level <= 60) return 300;
+  if(level <= 80) return 400;
+  return 500;
+}
+
+/* -------------------------
+   Fecha helpers
+   ------------------------- */
+function getDayOfYear(d){
+  const start = new Date(d.getFullYear(),0,0);
+  const diff = d - start + ((start.getTimezoneOffset() - d.getTimezoneOffset())*60000);
+  const oneDay = 1000*60*60*24;
+  return Math.floor(diff/oneDay);
+}
+function getISOWeekNumber(d){
+  // returns ISO week number (1-53)
+  const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  const dayNum = date.getUTCDay() || 7;
+  date.setUTCDate(date.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(date.getUTCFullYear(),0,1));
+  return Math.ceil((((date - yearStart) / 86400000) + 1)/7);
+}
+
+/* -------------------------
+   Estado inicial / cargar
+   ------------------------- */
 let state = {
-  level:1, xp:0, me:20,
-  mental:5, discipline:4, focus:3, creativity:6, energy:10,
-  dailyDate:null, dailyMissions:[],
-  weeklyStart:null, weeklyMissions:[],
-  totalMissionsCompleted:0, totalXpEarned:0,
-  exams: []
+  level: 1,
+  xp: 0,
+  xpNeeded: 100,
+  me: 20,
+  daily: [], // array of mission objects for the day
+  weekly: [],
+  specials: SPECIALS.slice(), // fixed pool displayed
+  inventory: [], // purchased trophies ids
+  stats: {mental:5, disciplina:4, concentracion:3, creatividad:6, energia:10}
 };
 
-function saveState(){ try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){ console.error(e); } }
 function loadState(){
-  try{
-    const s = localStorage.getItem(STORAGE_KEY);
-    if(s) state = JSON.parse(s);
-  }catch(e){ console.error('load error',e); }
+  const s = load('state', null);
+  if(s) { state = Object.assign(state, s); }
+  // ensure xpNeeded consistent
+  state.xpNeeded = xpForLevel(state.level);
 }
 
-// ---------- Helpers ----------
-function todayStr(){ return new Date().toDateString(); }
-function mondayStartISO(d = new Date()){
-  const date = new Date(d);
-  const day = date.getDay(); // 0 Sun .. 6
-  const diff = (day === 0 ? -6 : 1) - day; // shift to monday
-  date.setDate(date.getDate() + diff);
-  date.setHours(0,0,0,0);
-  return date.toISOString().slice(0,10); // YYYY-MM-DD
+/* -------------------------
+   Save wrapper
+   ------------------------- */
+function saveState(){
+  save('state', state);
 }
-function shuffle(arr){ return arr.slice().sort(()=>Math.random()-0.5); }
-function sample(arr, n){
-  const copy = arr.slice(); const out = []; n = Math.min(n, copy.length);
-  for(let i=0;i<n;i++){ const idx = Math.floor(Math.random()*copy.length); out.push(copy[idx]); copy.splice(idx,1); }
+
+/* -------------------------
+   Utilities: pick random unique items
+   ------------------------- */
+function pickRandomUnique(pool, count){
+  const copy = pool.slice();
+  const out = [];
+  for(let i=0;i<count && copy.length>0;i++){
+    const idx = Math.floor(Math.random()*copy.length);
+    out.push(copy.splice(idx,1)[0]);
+  }
   return out;
 }
 
-// ---------- XP / Level ----------
-function xpNeededFor(l){
-  if(l <= 20) return 100;
-  if(l <= 50) return 150;
-  if(l <= 80) return 200;
-  return 225;
-}
-function addXp(amount){
-  if(!amount || amount <= 0) return;
-  state.xp += amount;
-  state.totalXpEarned += amount;
-  let leveled = false;
-  while(state.level < 100 && state.xp >= xpNeededFor(state.level)){
-    state.xp -= xpNeededFor(state.level);
-    state.level++;
-    state.energy = (state.energy||0) + 1;
-    state.focus = (state.focus||0) + 1;
-    leveled = true;
+/* -------------------------
+   Regeneración diaria / semanal
+   ------------------------- */
+function ensureMissionsAreCurrent(){
+  const now = new Date();
+  const today = getDayOfYear(now) + '_' + now.getFullYear();
+  const week = getISOWeekNumber(now) + '_' + now.getFullYear();
+
+  const savedDay = load('lastDay', null);
+  const savedWeek = load('lastWeek', null);
+
+  // If day changed -> regenerate daily missions (2-3)
+  if(savedDay !== today){
+    const count = Math.floor(Math.random()*2)+2; // 2 or 3
+    state.daily = pickRandomUnique(DAILY_POOL, count);
+    // store day marker
+    save('lastDay', today);
+    // save timestamp for potential expiration of temporary effects
   }
-  renderAll();
+
+  // If week changed -> regenerate weekly missions (2)
+  if(savedWeek !== week){
+    state.weekly = pickRandomUnique(WEEKLY_POOL, 2);
+    save('lastWeek', week);
+  }
+
+  // If empty first time, ensure there are missions
+  if(!state.daily || state.daily.length === 0){
+    const count = Math.floor(Math.random()*2)+2;
+    state.daily = pickRandomUnique(DAILY_POOL, count);
+  }
+  if(!state.weekly || state.weekly.length === 0){
+    state.weekly = pickRandomUnique(WEEKLY_POOL, 2);
+  }
+
   saveState();
-  if(leveled) toast('¡Subiste a nivel ' + state.level + '!');
 }
 
-// ---------- Missions generation (S2: weekly Monday) ----------
-function ensureWeekly(){
-  const monday = mondayStartISO();
-  if(state.weeklyStart !== monday || !state.weeklyMissions || state.weeklyMissions.length === 0){
-    const count = Math.random() < 0.5 ? 3 : 4;
-    const picks = sample(WEEKLY_BASE, count).map(m => ({...m, done:false}));
-    state.weeklyMissions = picks;
-    state.weeklyStart = monday;
-    saveState();
+/* -------------------------
+   Nivel up check
+   ------------------------- */
+function checkLevelUp(){
+  let leveled = false;
+  while(state.xp >= state.xpNeeded){
+    state.xp -= state.xpNeeded;
+    state.level += 1;
+    state.xpNeeded = xpForLevel(state.level);
+    leveled = true;
+    toast(`¡Subiste al nivel ${state.level}!`);
   }
-}
-function ensureDaily(){
-  const today = todayStr();
-  if(state.dailyDate !== today || !state.dailyMissions || state.dailyMissions.length === 0){
-    const count = Math.random() < 0.5 ? 2 : 3;
-    const picks = sample(DAILY_BASE, count).map(m => ({...m, done:false}));
-    state.dailyMissions = picks;
-    state.dailyDate = today;
-    saveState();
-  }
+  if(leveled) saveState();
 }
 
-// ---------- Render ----------
-function renderAll(){
-  // header quick
-  document.getElementById('ui-level').textContent = state.level;
-  document.getElementById('ui-me').textContent = state.me;
-  document.getElementById('char-level').textContent = state.level;
-  document.getElementById('char-xp').textContent = state.xp;
-  document.getElementById('char-xpmax').textContent = xpNeededFor(state.level);
-  document.getElementById('char-me').textContent = state.me;
-  // xp bar
-  const perc = Math.min(100, Math.round((state.xp / xpNeededFor(state.level)) * 100));
-  document.getElementById('xp-fill').style.width = perc + '%';
+/* -------------------------
+   UI rendering
+   ------------------------- */
+const area = document.getElementById('area');
+const tpl = {
+  profile: document.getElementById('profileTpl').content,
+  missions: document.getElementById('missionsTpl').content,
+  shop: document.getElementById('shopTpl').content,
+  inventory: document.getElementById('inventoryTpl').content,
+  skills: document.getElementById('skillsTpl').content
+};
+
+function renderProfile(){
+  area.innerHTML = '';
+  area.appendChild(document.importNode(tpl.profile, true));
+  document.getElementById('labelLevel').textContent = state.level;
+  document.getElementById('labelXP').textContent = `${state.xp} / ${state.xpNeeded}`;
+  const pct = Math.round((state.xp / state.xpNeeded)*100);
+  document.getElementById('progressBar').style.width = pct + '%';
+  document.getElementById('labelME').textContent = state.me;
   // stats
-  document.getElementById('stat-mental').textContent = state.mental;
-  document.getElementById('stat-discipline').textContent = state.discipline;
-  document.getElementById('stat-focus').textContent = state.focus;
-  document.getElementById('stat-creativity').textContent = state.creativity;
-  document.getElementById('stat-energy').textContent = state.energy;
-  // dates
-  document.getElementById('ui-date').textContent = state.dailyDate || '—';
-  document.getElementById('ui-weekstart').textContent = state.weeklyStart || '—';
-  // lists
-  const dl = document.getElementById('daily-list'); dl.innerHTML = '';
-  (state.dailyMissions || []).forEach((m, idx) => {
-    const li = document.createElement('li'); li.className='mission';
-    li.innerHTML = `<div style="flex:1"><div class="big">${escapeHtml(m.name)}</div>
-                    <div class="meta small">+${m.xp} XP ${m.me?('&nbsp;•&nbsp;+'+m.me+' ME'):''}</div></div>
-                    <div style="margin-left:12px"><button class="btn" ${m.done?'disabled':''} onclick="completeDaily(${idx})">${m.done?'Completada':'Completar'}</button></div>`;
-    dl.appendChild(li);
-  });
-  const wl = document.getElementById('weekly-list'); wl.innerHTML = '';
-  (state.weeklyMissions || []).forEach((m, idx) => {
-    const li = document.createElement('li'); li.className='mission';
-    li.innerHTML = `<div style="flex:1"><div class="big">${escapeHtml(m.name)}</div>
-                    <div class="meta small">+${m.xp} XP ${m.me?('&nbsp;•&nbsp;+'+m.me+' ME'):''}</div></div>
-                    <div style="margin-left:12px"><button class="btn" ${m.done?'disabled':''} onclick="completeWeekly(${idx})">${m.done?'Completada':'Completar'}</button></div>`;
-    wl.appendChild(li);
-  });
-  // exams
-  const exlist = document.getElementById('exam-list'); exlist.innerHTML = '';
-  (state.exams || []).slice().reverse().forEach(e => {
-    const li = document.createElement('li'); li.className='mission';
-    const subj = e.subject ? escapeHtml(e.subject) + ' — ' : '';
-    li.innerHTML = `<div style="flex:1"><div class="big">${subj}Nota: ${e.grade}</div>
-                    <div class="meta small">${e.xp} XP • ${e.me} ME • ${new Date(e.date).toLocaleString()}</div></div>`;
-    exlist.appendChild(li);
-  });
-  // logs
-  document.getElementById('stat-total-missions').textContent = state.totalMissionsCompleted;
-  document.getElementById('stat-total-xp').textContent = state.totalXpEarned;
-  document.getElementById('stat-exams-count').textContent = state.exams.length;
-  // shop
-  document.getElementById('shop-me').textContent = state.me;
-}
-function escapeHtml(s){ return (s+'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+  document.getElementById('statMental').textContent = state.stats.mental;
+  document.getElementById('statDisciplina').textContent = state.stats.disciplina;
+  document.getElementById('statConcentracion').textContent = state.stats.concentracion;
+  document.getElementById('statCreatividad').textContent = state.stats.creatividad;
+  document.getElementById('statEnergia').textContent = state.stats.energia;
 
-// ---------- Actions ----------
-function completeDaily(i){
-  const m = state.dailyMissions[i]; if(!m || m.done) return;
-  m.done = true; state.totalMissionsCompleted++; state.me += m.me || 0;
-  addXp(m.xp || 0); saveState(); renderAll();
-}
-function completeWeekly(i){
-  const m = state.weeklyMissions[i]; if(!m || m.done) return;
-  m.done = true; state.totalMissionsCompleted++; state.me += m.me || 0;
-  addXp(m.xp || 0); saveState(); renderAll();
+  // buttons
+  document.getElementById('btnOpenMissions').onclick = ()=>{
+    setActiveTab('tabMissions'); renderMissions();
+  };
+  document.getElementById('btnOpenShop').onclick = ()=>{
+    setActiveTab('tabShop'); renderShop();
+  };
+
+  // dev simulation buttons (for testing)
+  document.getElementById('btnSimDay').onclick = ()=>{
+    // increment saved day so on next ensure1 call it will regenerate
+    const last = load('lastDay', null);
+    if(last){
+      // parse day_year
+      const [d,y] = last.split('_');
+      // try to increment day by 1: we just set lastDay to yesterday so ensureMissions will think it's new day
+      // simpler: set lastDay to a very old day to force regeneration
+      save('lastDay', '000_1970');
+    } else {
+      save('lastDay','000_1970');
+    }
+    ensureMissionsAreCurrent(); saveState(); toast('Simulado: día avanzado. Misiones diarias regeneradas.'); renderMissions();
+  };
+
+  document.getElementById('btnSimWeek').onclick = ()=>{
+    save('lastWeek','0_1970');
+    ensureMissionsAreCurrent(); saveState(); toast('Simulado: semana avanzada. Misiones semanales regeneradas.'); renderMissions();
+  };
+
+  document.getElementById('btnReset').onclick = ()=>{
+    if(confirm('¿Resetear todos los datos y volver al inicio? Se perderán progresos.')) {
+      localStorage.clear();
+      location.reload();
+    }
+  };
 }
 
-// ---------- Shop ----------
-function buyItem(key){
-  if(key === 'focus'){
-    if(state.me < 10){ toast('No tienes ME suficientes'); return; }
-    state.me -= 10; state.me += 1; toast('Poción usada: +1 ME');
-  } else if(key === 'snack'){
-    if(state.me < 5){ toast('No tienes ME suficientes'); return; }
-    state.me -= 5; state.energy = (state.energy || 0) + 2; toast('Snack: +2 Energía');
-  } else if(key === 'cafe'){
-    if(state.me < 8){ toast('No tienes ME suficientes'); return; }
-    state.me -= 8; state.focus = (state.focus || 0) + 1; toast('Café: +1 Concentración');
+function renderMissions(){
+  area.innerHTML = '';
+  area.appendChild(document.importNode(tpl.missions, true));
+  const dailyList = document.getElementById('dailyList');
+  const weeklyList = document.getElementById('weeklyList');
+  const specialList = document.getElementById('specialList');
+
+  // populate daily
+  dailyList.innerHTML = '';
+  state.daily.forEach((m, idx)=>{
+    const li = document.createElement('li');
+    li.innerHTML = `<div>
+        <div style="font-weight:600">${m.title}</div>
+        <div class="muted" style="font-size:13px">${m.info}</div>
+      </div>
+      <div style="text-align:right">
+        <div class="muted" style="font-size:13px">${m.xp} XP ${m.me ? ' · ' + m.me + ' ME' : ''}</div>
+        <div style="margin-top:8px;">
+          <button class="btn" data-type="daily" data-index="${idx}">Completar</button>
+        </div>
+      </div>`;
+    dailyList.appendChild(li);
+  });
+
+  // weekly
+  weeklyList.innerHTML = '';
+  state.weekly.forEach((m, idx)=>{
+    const li = document.createElement('li');
+    li.innerHTML = `<div>
+        <div style="font-weight:600">${m.title}</div>
+        <div class="muted" style="font-size:13px">${m.info}</div>
+      </div>
+      <div style="text-align:right">
+        <div class="muted" style="font-size:13px">${m.xp} XP ${m.me ? ' · ' + m.me + ' ME' : ''}</div>
+        <div style="margin-top:8px;">
+          <button class="btn" data-type="weekly" data-index="${idx}">Completar</button>
+        </div>
+      </div>`;
+    weeklyList.appendChild(li);
+  });
+
+  // specials
+  specialList.innerHTML = '';
+  state.specials.forEach((m, idx)=>{
+    const li = document.createElement('li');
+    li.innerHTML = `<div>
+        <div style="font-weight:600">${m.title}</div>
+        <div class="muted" style="font-size:13px">${m.info}</div>
+      </div>
+      <div style="text-align:right">
+        <div class="muted" style="font-size:13px">${m.xp} XP ${m.me ? ' · ' + m.me + ' ME' : ''}</div>
+        <div style="margin-top:8px;">
+          <button class="btn" data-type="special" data-index="${idx}">Completar</button>
+        </div>
+      </div>`;
+    specialList.appendChild(li);
+  });
+
+  // event delegation for complete buttons
+  area.querySelectorAll('button[data-type]').forEach(btn=>{
+    btn.onclick = (e)=>{
+      const type = btn.getAttribute('data-type');
+      const index = parseInt(btn.getAttribute('data-index'),10);
+      completeMission(type, index);
+    };
+  });
+}
+
+function renderShop(){
+  area.innerHTML = '';
+  area.appendChild(document.importNode(tpl.shop, true));
+  const shopItems = document.getElementById('shopItems');
+  shopItems.innerHTML = '';
+  TROPHIES.forEach(item=>{
+    const div = document.createElement('div');
+    div.className = 'shop-item';
+    const owned = state.inventory.includes(item.id);
+    div.innerHTML = `<div>
+        <div style="font-weight:600">${item.title}</div>
+        <div class="muted" style="font-size:13px">${item.desc}</div>
+      </div>
+      <div style="text-align:right">
+        <div class="muted" style="font-size:13px">${item.price} ME</div>
+        <div style="margin-top:8px;">
+          <button class="btn" data-id="${item.id}" ${owned ? 'disabled' : ''}>${owned ? 'Comprado' : 'Comprar'}</button>
+        </div>
+      </div>`;
+    shopItems.appendChild(div);
+  });
+  // attach handlers
+  shopItems.querySelectorAll('button[data-id]').forEach(b=>{
+    b.onclick = ()=>{
+      const id = b.getAttribute('data-id');
+      purchaseTrophy(id);
+    };
+  });
+  // show ME
+  const label = document.createElement('div');
+  label.className = 'muted';
+  label.style.marginTop = '10px';
+  label.innerHTML = `ME actual: <strong>${state.me}</strong>`;
+  shopItems.appendChild(label);
+}
+
+function renderInventory(){
+  area.innerHTML = '';
+  area.appendChild(document.importNode(tpl.inventory, true));
+  const grid = document.getElementById('inventoryGrid');
+  grid.innerHTML = '';
+  if(state.inventory.length === 0){
+    grid.innerHTML = '<div class="muted">No tienes logros todavía. Compra trofeos en la Tienda.</div>';
+    return;
   }
-  saveState(); renderAll();
+  state.inventory.forEach(id=>{
+    const t = TROPHIES.find(x=>x.id===id);
+    if(!t) return;
+    const d = document.createElement('div');
+    d.className = 'trophy';
+    d.innerHTML = `<div style="font-weight:700">${t.title}</div><div class="muted" style="font-size:13px">${t.desc}</div><div style="margin-top:8px; font-size:13px; color:var(--muted)">Comprado</div>`;
+    grid.appendChild(d);
+  });
 }
 
-// ---------- Exams: rewards mapping (user-described) ----------
-function examRewards(grade){
-  const g = Number(grade);
-  if(g < 5) return {xp:10, me:0};
-  if(g < 6) return {xp:20, me:1};
-  if(g < 7) return {xp:30, me:1};
-  if(g < 8) return {xp:40, me:2};
-  if(g < 9) return {xp:50, me:3};
-  if(g < 9.5) return {xp:65, me:4};
-  return {xp:80, me:5};
-}
-function registerExam(){
-  const subj = document.getElementById('exam-subject').value.trim();
-  const gradeInput = document.getElementById('exam-grade').value;
-  if(gradeInput === ''){ toast('Introduce una nota entre 0 y 10'); return; }
-  const grade = Math.max(0, Math.min(10, parseFloat(gradeInput)));
-  const reward = examRewards(grade);
-  const rec = {subject: subj, grade: grade.toFixed(1), xp: reward.xp, me: reward.me, date: new Date().toISOString()};
-  state.exams.push(rec);
-  state.me += reward.me;
-  addXp(reward.xp);
-  saveState(); renderAll();
-  toast(`Examen registrado: +${reward.xp} XP, +${reward.me} ME`);
-  document.getElementById('exam-grade').value = '';
-  document.getElementById('exam-subject').value = '';
+function renderSkills(){
+  area.innerHTML = '';
+  area.appendChild(document.importNode(tpl.skills, true));
+  const skillsList = document.getElementById('skillsList');
+  const skillsByLevel = [
+    {lvl:10, name:'Gestión del Tiempo I', desc:'Mejor planificación y productividad.'},
+    {lvl:20, name:'Súper Concentración I', desc:'Mayor tiempo efectivo de estudio.'},
+    {lvl:30, name:'Resumen Perfecto', desc:'Habilidad de sintetizar unidades.'},
+    {lvl:40, name:'Memoria Largo Plazo I', desc:'Mejora simbólica de retención.'},
+    {lvl:50, name:'Planificador Maestro', desc:'Organización avanzada de proyectos.'},
+    {lvl:60, name:'Concentración Inquebrantable', desc:'Más enfoque.'},
+    {lvl:70, name:'Gestión del Tiempo II', desc:'Optimización avanzada del calendario.'},
+    {lvl:80, name:'Memoria Largo Plazo II', desc:'Mejora de retención y repaso.'},
+    {lvl:90, name:'Sabiduría Avanzada', desc:'Habilidades combinadas.'},
+    {lvl:100, name:'SABIO SUPREMO', desc:'Título final: elección de habilidad.'}
+  ];
+  skillsByLevel.forEach(s=>{
+    const li = document.createElement('li');
+    const unlocked = state.level >= s.lvl;
+    li.innerHTML = `<div style="display:flex; justify-content:space-between; gap:12px;">
+      <div><strong>${s.name}</strong><div class="muted" style="font-size:13px">${s.desc}</div></div>
+      <div style="align-self:center">${unlocked ? '<small style="color:var(--success)">Desbloqueado</small>' : '<small class="muted">Nivel ' + s.lvl + '</small>'}</div>
+    </div>`;
+    skillsList.appendChild(li);
+  });
 }
 
-// ---------- Small toast ----------
-let toastTimer = null;
+/* -------------------------
+   Mission completion
+   ------------------------- */
+function completeMission(type, index){
+  if(type === 'daily'){
+    const m = state.daily[index];
+    if(!m) return;
+    state.xp += m.xp;
+    state.me += (m.me||0);
+    // remove mission
+    state.daily.splice(index,1);
+    toast(`Misión diaria completada: +${m.xp} XP ${m.me ? '· +' + m.me + ' ME' : ''}`);
+    saveState(); checkLevelUp(); renderMissions(); renderTab('tabProfile'); // update profile values
+  } else if(type === 'weekly'){
+    const m = state.weekly[index];
+    if(!m) return;
+    state.xp += m.xp;
+    state.me += (m.me||0);
+    // remove mission: will not regenerate until week change (ensureMissionsAreCurrent handles regeneration)
+    state.weekly.splice(index,1);
+    toast(`Misión semanal completada: +${m.xp} XP ${m.me ? '· +' + m.me + ' ME' : ''}`);
+    saveState(); checkLevelUp(); renderMissions(); renderTab('tabProfile');
+  } else if(type === 'special'){
+    const m = state.specials[index];
+    if(!m) return;
+    state.xp += m.xp;
+    state.me += (m.me||0);
+    // specials: we'll remove the mission after completion to avoid repeat unless the app wants to keep it
+    state.specials.splice(index,1);
+    toast(`Misión especial completada: +${m.xp} XP ${m.me ? '· +' + m.me + ' ME' : ''}`);
+    saveState(); checkLevelUp(); renderMissions(); renderTab('tabProfile');
+  }
+  // update XP UI
+  updateProfileUI();
+}
+
+/* -------------------------
+   Purchase trophies
+   ------------------------- */
+function purchaseTrophy(id){
+  const item = TROPHIES.find(t=>t.id===id);
+  if(!item) return;
+  if(state.inventory.includes(id)){
+    toast('Ya lo posees.');
+    return;
+  }
+  if(state.me < item.price){
+    toast('No tienes suficientes ME.');
+    return;
+  }
+  state.me -= item.price;
+  state.inventory.push(id);
+  saveState();
+  toast(`Comprado: ${item.title}`);
+  renderShop();
+  renderInventory();
+  updateProfileUI();
+}
+
+/* -------------------------
+   UI helpers
+   ------------------------- */
 function toast(msg){
-  const t = document.createElement('div');
-  t.style.position='fixed'; t.style.left='50%'; t.style.transform='translateX(-50%)'; t.style.bottom='88px';
-  t.style.background='rgba(10,10,10,0.95)'; t.style.padding='10px 14px'; t.style.borderRadius='10px';
-  t.style.color='white'; t.style.boxShadow='0 6px 18px rgba(0,0,0,0.5)'; t.style.zIndex=9999; t.textContent=msg;
-  document.body.appendChild(t);
-  if(toastTimer) clearTimeout(toastTimer);
-  toastTimer = setTimeout(()=>{ t.remove(); toastTimer=null; }, 2400);
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.display = 'block';
+  clearTimeout(t._t);
+  t._t = setTimeout(()=> t.style.display = 'none', 3000);
 }
 
-// ---------- Tabs ----------
-function showTab(sectionId, btn){
-  document.querySelectorAll('.section').forEach(s=>s.classList.add('hidden'));
-  document.getElementById(sectionId).classList.remove('hidden');
-  document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active'));
-  if(btn) btn.classList.add('active');
+function updateProfileUI(){
+  // if profile is visible, update labels
+  const lv = document.getElementById('labelLevel');
+  if(lv) lv.textContent = state.level;
+  const lxp = document.getElementById('labelXP');
+  if(lxp) lxp.textContent = `${state.xp} / ${state.xpNeeded}`;
+  const lme = document.getElementById('labelME');
+  if(lme) lme.textContent = state.me;
+  const pb = document.getElementById('progressBar');
+  if(pb) pb.style.width = Math.round((state.xp/state.xpNeeded)*100) + '%';
 }
 
-// ---------- Init ----------
+/* -------------------------
+   Tabs navigation
+   ------------------------- */
+const tabs = ['tabProfile','tabMissions','tabShop','tabInventory','tabSkills'];
+tabs.forEach(id=>{
+  const el = document.getElementById(id);
+  el.onclick = ()=>{
+    setActiveTab(id);
+    if(id === 'tabProfile') renderProfile();
+    if(id === 'tabMissions') renderMissions();
+    if(id === 'tabShop') renderShop();
+    if(id === 'tabInventory') renderInventory();
+    if(id === 'tabSkills') renderSkills();
+  };
+});
+
+function setActiveTab(id){
+  tabs.forEach(t=>{
+    const el = document.getElementById(t);
+    if(el) el.classList.toggle('active', t===id);
+  });
+  // update URL hash maybe
+  location.hash = id;
+}
+
+function renderTab(id){
+  // switcher used in code to show profile after actions
+  const map = {
+    'tabProfile': ()=>renderProfile(),
+    'tabMissions': ()=>renderMissions(),
+    'tabShop': ()=>renderShop(),
+    'tabInventory': ()=>renderInventory(),
+    'tabSkills': ()=>renderSkills()
+  };
+  if(map[id]) map[id]();
+}
+
+/* -------------------------
+   Init app
+   ------------------------- */
 function init(){
+  // load or set defaults
   loadState();
-  ensureWeekly();
-  ensureDaily();
-  renderAll();
-  showTab('sec-mis', document.getElementById('tab-mis'));
-  // autosave every 5s
-  setInterval(saveState, 5000);
+  ensureMissionsAreCurrent();
+
+  // initial UI: profile
+  renderProfile();
+
+  // update saved UI if mission regen happened
+  updateProfileUI();
+
+  // if there's a hash, go to that tab
+  const hash = location.hash.replace('#','');
+  if(hash && tabs.includes(hash)) {
+    setActiveTab(hash);
+    renderTab(hash);
+  }
 }
+
+// run on load
 init();
 
-/* Notes:
- - Data kept in localStorage key 'sq_state_v2'
- - Daily missions: generated once per day (device local date)
- - Weekly missions: generated every Monday (week starting Monday)
- - No "reset data" option; to clear progress you must clear site data manually
-*/
+/* -------------------------
+   Save state periodically (autosave) - good hygiene
+   ------------------------- */
+setInterval(()=> saveState(), 5000);
+
 </script>
-  <!-- ======================= -->
-<!--     PWA + SERVICE WORKER -->
-<!-- ======================= -->
-
-<!-- Manifest incrustado dentro del propio HTML -->
-<link rel="manifest" href="data:application/json,{
-  &quot;name&quot;: &quot;StudyQuest&quot;,
-  &quot;short_name&quot;: &quot;StudyQuest&quot;,
-  &quot;start_url&quot;: &quot;.&quot;,
-  &quot;display&quot;: &quot;standalone&quot;,
-  &quot;background_color&quot;: &quot;#070709&quot;,
-  &quot;theme_color&quot;: &quot;#070709&quot;,
-  &quot;icons&quot;: [
-    {
-      &quot;src&quot;: &quot;data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAB70lEQVR4nO2bMU7DQBBFz1lAASRAAUkQBIkQBIkQBIkQBIkQBMkVwOtvYGylR29UZ3uZE6V9yjvDXqj5WbGwUZvcCByA/xfUw3sALATfN4fZ9Glj9ogAhpsmx8OHHLdPG0v7T3kB4Z8QIEQIEQIEQIEQIEQIOQhQF2kAmTgPsvw+Px6PPb7fb7cYLwIzXMQcJr1dd12yTTNOy7J5Go1EU1XNvtevtbIsy7LMuy7KMfZ9NptNs12yTTPMcp9M0z06n2w22x0Oh2zXW63WCxWOBwOKRSKUykUilUpVKpVIpFIpFKZTIZDKZzOZzGYzmcxmMwG63W6zWazWbDb7TaDQaDQarVaDQaDQa/X63WC7XaLfb7XZbNZrNZrPZbNZrNZrPZbBYDAYDAYDAcDgcjn8/x+Hx2Gw2Gw2Gy2Ww2Ww2m80m83mcxmMwGk8nk8nk8nq9VqtVqtVovFYrFYrFYrFYrFYrFYrFY/D4/H4/H4/H49Go9Ho9Gk8nk8nk8nk8nk8nk8vk8vk8v0J+AS6of2qN5LKtAAAAAElFTkSuQmCC&quot;,
-      &quot;sizes&quot;: &quot;128x128&quot;,
-      &quot;type&quot;: &quot;image/png&quot;
-    }
-  ]
-}">
-
-<script>
-/* SERVICE WORKER INLINE GENERATOR */
-if ('serviceWorker' in navigator) {
-  const swCode = `
-    const CACHE = 'sq-cache-v1';
-    self.addEventListener('install', e => {
-      e.waitUntil(
-        caches.open(CACHE).then(c => c.addAll(['./']))
-      );
-    });
-    self.addEventListener('fetch', e => {
-      e.respondWith(
-        caches.match(e.request).then(res => res || fetch(e.request))
-      );
-    });
-  `;
-  const blob = new Blob([swCode], {type:'application/javascript'});
-  const swUrl = URL.createObjectURL(blob);
-  navigator.serviceWorker.register(swUrl).catch(err => console.error('SW error', err));
-}
-</script>
-
 </body>
 </html>
